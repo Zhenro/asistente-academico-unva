@@ -29,10 +29,10 @@ except ImportError:
     )
     import analytics
 
-# Try importing modern Google GenAI Client
+# Try importing modern Google GenAI Client (forzar v1beta para soportar alias *-latest en cualquier versión del SDK)
 try:
     from google import genai
-    gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY, http_options={"api_version": "v1beta"}) if GEMINI_API_KEY else None
     HAS_GEMINI = True
 except ImportError:
     gemini_client = None
@@ -486,7 +486,7 @@ class RAGEngine:
             if client is None and HAS_GEMINI:
                 try:
                     from google import genai
-                    client = genai.Client(api_key=current_api_key)
+                    client = genai.Client(api_key=current_api_key, http_options={"api_version": "v1beta"})
                 except Exception as e:
                     print(f"[!] Error creando genai.Client: {e}")
 
@@ -693,9 +693,9 @@ class RAGEngine:
 
         key_terms = tokenize_bm25(query)
         best_doc = contexts[0]
-        intro = f"De acuerdo con la documentación oficial del **UNVA** (en *{best_doc['source']}*):\n\n"
+        intro = f"De acuerdo con la documentación oficial de la **UNVA** (en *{best_doc['source']}*):\n\n"
         if student:
-            intro = f"¡Hola, **{student.get('nombre')}**! 🎓 Revisando tu expediente en **TernaNet** ({student.get('carrera')}, {student.get('semestre')}do/to semestre) y la documentación oficial del **UNVA**:\n\n"
+            intro = f"¡Hola, **{student.get('nombre')}**! 🎓 Revisando tu expediente en **TernaNet** ({student.get('carrera')}, {student.get('semestre')}do/to semestre) y la documentación oficial de la **UNVA**:\n\n"
 
         all_sentences = []
         seen_texts = set()
