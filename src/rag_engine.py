@@ -412,7 +412,7 @@ class RAGEngine:
             "1. Responde de forma clara y estructurada (usa viñetas o listas numeradas cuando explique requisitos o pasos).\n"
             "2. Basa tu respuesta ESTRICTAMENTE en la información institucional proporcionada en el CONTEXTO.\n"
             "3. Recuerda y utiliza el HISTORIAL DE LA CONVERSACIÓN para responder preguntas de seguimiento (ej. pronombres como 'allí', 'eso', 'esa sede', etc.).\n"
-            "4. Menciona las fuentes oficiales, artículos o sedes relevantes según el contexto.\n"
+            "4. Menciona el nombre del reglamento, guía o artículo de forma natural (ej. 'Según el Reglamento de Evaluación Estudiantil...'), pero NO repitas nombres técnicos de archivos '.pdf' ni escribas '(Fuente: ...)' al final de cada viñeta, ya que el sistema muestra las fuentes oficiales automáticamente al pie del mensaje.\n"
             "5. Si el contexto no contiene la respuesta completa, indica cordialmente que el estudiante debe acudir a la taquilla de Control de Estudios o consultar en TernaNet.\n"
             "6. Responde siempre en español formal pero cercano."
         )
