@@ -17,12 +17,14 @@ Sistema integral de atención, orientación y resolución de consultas académic
   * Porcentaje de créditos acumulados vs. requisitos de **Servicio Comunitario** (50% de UC) y **Pasantías**.
   * Estado de cuotas de financiamiento con **Cashea** y solvencias de biblioteca, caja y control de estudios.
   * Promedio acumulado, materias en curso y estatus de graduación.
-* Incluye perfiles de prueba con casos académicos reales:
-  * **José Andrés Fermín** (`27.346.776`) · TSU Informática (Guatire)
-  * **Diego Torres** (`28.416.131`) · TSU Informática (Guatire)
-  * **Maryander Torres** (`30.566.388`) · TSU Administración (Caracas)
-  * **Ismael Pernía** (`30.155.465`) · TSU Contaduría (Guatire)
-  * **Anibal Figuera** (`17.498.904`) · TSU Informática (Guatire)
+* Incluye 7 perfiles de prueba con casos académicos variados:
+  * **José Andrés Fermín** (`27.346.776`) · TSU en Informática (Guatire)
+  * **Diego Torres** (`28.416.131`) · TSU en Informática (Guatire)
+  * **Maryander Torres** (`30.566.388`) · TSU en Administración de Empresas (Caracas)
+  * **Ismael Pernía** (`30.155.465`) · TSU en Informática (Guatire)
+  * **Anibal Figuera** (`17.498.904`) · TSU en Contaduría y Finanzas (Caracas)
+  * **Félix Ruiz** (`30.771.246`) · TSU en Publicidad y Mercadeo (Guatire)
+  * **Paola Rada** (`31.418.461`) · TSU en Informática (Barcelona / Puerto La Cruz)
 
 ### 3. 🔐 Panel Administrativo de Secretaría (`/admin`)
 * Acceso protegido por contraseña institucional (`unva2026`).
@@ -85,8 +87,9 @@ Abre en tu navegador:
 ### 2. Configurar Claves de Entorno (`.env`)
 ```env
 GEMINI_API_KEY=tu_clave_de_google_aistudio
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-flash-lite-latest
 TELEGRAM_BOT_TOKEN=tu_token_de_botfather
+TELEGRAM_BOT_USERNAME=UNDVABOT
 ADMIN_PASSWORD=unva2026
 ```
 
@@ -96,23 +99,30 @@ ADMIN_PASSWORD=unva2026
 
 ```text
 CIT/
+├── .github/workflows/
+│   ├── ci.yml              # Integración continua (21 pruebas automatizadas)
+│   └── keep_alive.yml      # Ping periódico para mantener el servicio activo
 ├── data/
-│   ├── documents/          # PDFs normativos e institucionales oficiales
-│   ├── students.json       # Base de datos simulada de expedientes TernaNet
-│   └── analytics.json      # Almacén de métricas, vacíos normativos y feedback
+│   ├── documents/          # PDFs normativos e institucionales oficiales (UNVA)
+│   ├── students.json       # Base de datos simulada de expedientes TernaNet (7 perfiles)
+│   └── analytics.json      # Almacén de métricas, vacíos normativos y feedback (UTC-4)
 ├── frontend/
-│   ├── index.html          # Interfaz web del estudiante (chat, TernaNet, feedback)
+│   ├── index.html          # Interfaz web del estudiante (Modo General + TernaNet, SSE, feedback)
 │   └── admin.html          # Panel de administración, analítica y expedientes
 ├── scripts/
-│   └── generate_documents.py # Generador de PDFs institucionales oficiales
+│   ├── generate_documents.py # Generador de PDFs institucionales oficiales (UNVA)
+│   └── telegram_bot.py     # Bot de Telegram en modo polling local
 ├── src/
 │   ├── config.py           # Variables de entorno y configuración general
 │   ├── ingestion.py        # Procesamiento, chunking y extracción de texto de PDFs
-│   ├── rag_engine.py       # Motor RAG semántico, memoria de sesión y transcripción de voz
+│   ├── rag_engine.py       # Motor RAG BM25 ultraligero (<35MB RAM), SSE async y audio
 │   ├── ternanet.py         # Conector, detección de cédulas y formateo de expedientes
-│   ├── analytics.py        # Motor de métricas, votaciones 👍/👎 y exportación CSV
-│   └── api.py              # Endpoints FastAPI y webhook de Telegram
+│   ├── analytics.py        # Motor de métricas, votaciones 👍/👎 y exportación CSV segura
+│   └── api.py              # Endpoints FastAPI, rate limiting y webhook de Telegram
+├── tests/
+│   └── test_project.py     # Suite de pruebas unitarias y de integración (21 tests)
 ├── requirements.txt        # Dependencias de Python
-├── run.py                  # Script de arranque
+├── render.yaml             # Configuración de despliegue en Render
+├── run.py                  # Script de arranque local
 └── README.md
 ```

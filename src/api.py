@@ -91,7 +91,7 @@ async def lifespan(app_instance: FastAPI):
     if not ext_url and os.getenv("RENDER_EXTERNAL_HOSTNAME"):
         ext_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}"
     if not ext_url and tg_token:
-        ext_url = "https://asistente-academico-iutecp.onrender.com"
+        ext_url = "https://asistente-academico-unva.onrender.com"
 
     bg_tasks: List[asyncio.Task] = []
 
@@ -510,7 +510,8 @@ async def telegram_webhook(
 async def telegram_status():
     token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     configured = bool(token)
-    webhook_url = "https://asistente-academico-iutecp.onrender.com/api/telegram-webhook"
+    ext_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("SERVER_PUBLIC_URL") or "https://asistente-academico-unva.onrender.com"
+    webhook_url = f"{ext_url.rstrip('/')}/api/telegram-webhook"
     return {
         "configured": configured,
         "webhook_url": webhook_url,
@@ -528,7 +529,7 @@ async def telegram_setup():
     if not ext_url and os.getenv("RENDER_EXTERNAL_HOSTNAME"):
         ext_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}"
     if not ext_url:
-        ext_url = "https://asistente-academico-iutecp.onrender.com"
+        ext_url = "https://asistente-academico-unva.onrender.com"
 
     webhook_target = f"{ext_url.rstrip('/')}/api/telegram-webhook"
     try:

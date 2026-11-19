@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: iutecp-asistente-virtual
+    name: asistente-academico-unva
     env: python
     buildCommand: pip install -r requirements.txt && python scripts/generate_documents.py
     startCommand: uvicorn src.api:app --host 0.0.0.0 --port $PORT
