@@ -6,7 +6,7 @@ Sistema integral de atención, orientación y resolución de consultas académic
 
 ## 🌟 Características Principales del Sistema
 
-### 1. 🎙️ Asistencia Multimodal por Telegram (`@UnvaAsistenteBot`)
+### 1. 🎙️ Asistencia Multimodal por Telegram (`@UNDVABOT`)
 * Soporte para consultas en **texto** y **notas de voz** estudiantiles.
 * Transcripción fonética inteligente con **Google Gemini Multimodal** y glosario institucional (*Cashea*, *TernaNet*, *UNVA*, *PI*, materias y sedes).
 * Despacho asíncrono con respuesta inmediata para evitar tiempos de espera o cancelaciones de conexión.

@@ -613,7 +613,7 @@ async def admin_list_documents(x_admin_key: Optional[str] = Header(None)):
         "documents": docs,
         "total_documents": len(docs),
         "total_chunks": total_chunks,
-        "bot_username": os.getenv("TELEGRAM_BOT_USERNAME", "UnvaAsistenteBot").lstrip("@")
+        "bot_username": os.getenv("TELEGRAM_BOT_USERNAME", "UNDVABOT").lstrip("@")
     }
 
 
