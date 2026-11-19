@@ -75,7 +75,7 @@ async def lifespan(app_instance: FastAPI):
     httpx_client = httpx.AsyncClient(
         timeout=httpx.Timeout(25.0, connect=10.0),
         limits=httpx.Limits(max_keepalive_connections=20, max_connections=40),
-        headers={"User-Agent": "IUTECP-Assistant/2.1 (FastAPI; Render Cloud)"}
+        headers={"User-Agent": "UNVA-Assistant/2.1 (FastAPI; Render Cloud)"}
     )
 
     print("[*] Precargando fragmentos de documentos en memoria...")
@@ -135,8 +135,8 @@ async def lifespan(app_instance: FastAPI):
 
 
 app = FastAPI(
-    title="IUTECP - Asistente Virtual Académico",
-    description="API RAG para resolución de consultas estudiantiles e institucionales del IUTECP",
+    title="UNVA - Asistente Virtual Académico",
+    description="API RAG para resolución de consultas estudiantiles e institucionales de la Universidad Nacional del Valle Alto (UNVA)",
     version="2.1.0",
     lifespan=lifespan
 )
@@ -393,7 +393,7 @@ async def handle_telegram_message_async(token: str, message: dict):
     if text.startswith("/start"):
         welcome_msg = (
             f"¡Hola {user_name}! 👋\n\n"
-            "Soy el *Asistente Académico Oficial del IUTECP*.\n\n"
+            "Soy el *Asistente Académico Oficial de la Universidad Nacional del Valle Alto (UNVA)*.\n\n"
             "Puedes hacerme tus consultas por *texto* o enviarme una *nota de voz* 🎙️ sobre:\n"
             "• 📋 Requisitos de nuevo ingreso y TernaNet\n"
             "• 🏢 Sedes, ubicaciones y teléfonos\n"
@@ -536,7 +536,7 @@ async def telegram_setup():
         return {"status": "error", "message": str(e)}
 
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "iutecp2026").strip()
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "unva2026").strip()
 ADMIN_LOGIN_MAX_ATTEMPTS = int(os.getenv("ADMIN_LOGIN_MAX_ATTEMPTS", "10"))
 ADMIN_LOGIN_WINDOW_SECONDS = int(os.getenv("ADMIN_LOGIN_WINDOW_SECONDS", "300"))
 _ADMIN_LOGIN_BUCKETS: Dict[str, List[float]] = defaultdict(list)
@@ -613,7 +613,7 @@ async def admin_list_documents(x_admin_key: Optional[str] = Header(None)):
         "documents": docs,
         "total_documents": len(docs),
         "total_chunks": total_chunks,
-        "bot_username": "IutecpAsistenteBot"
+        "bot_username": os.getenv("TELEGRAM_BOT_USERNAME", "UnvaAsistenteBot").lstrip("@")
     }
 
 
@@ -739,7 +739,7 @@ async def admin_export_analytics_csv(x_admin_key: Optional[str] = Header(None)):
     return PlainTextResponse(
         content=csv_content,
         media_type="text/csv",
-        headers={"Content-Disposition": 'attachment; filename="reporte_consultas_iutecp.csv"'}
+        headers={"Content-Disposition": 'attachment; filename="reporte_consultas_unva.csv"'}
     )
 
 

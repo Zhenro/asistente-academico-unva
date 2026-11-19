@@ -68,7 +68,7 @@ def normalize_text(text: str) -> str:
     return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
 
 
-# Mapa de sinónimos estudiantiles venezolanos ↔ terminología oficial del IUTECP
+# Mapa de sinónimos estudiantiles venezolanos ↔ terminología oficial de la Universidad Nacional del Valle Alto (UNVA)
 INSTITUTIONAL_SYNONYMS = {
     "mensualidad": ["pago", "arancel", "cashea", "cuota"],
     "matricula": ["pago", "arancel", "inscripcion", "cashea"],
@@ -87,7 +87,7 @@ INSTITUTIONAL_SYNONYMS = {
 
 
 def expand_query_synonyms(tokens: List[str]) -> List[str]:
-    """Expande tokens de consulta con sinónimos institucionales del IUTECP."""
+    """Expande tokens de consulta con sinónimos institucionales de la Universidad Nacional del Valle Alto (UNVA)."""
     expanded = list(tokens)
     seen = set(tokens)
     for t in tokens:
@@ -210,8 +210,8 @@ class RAGEngine:
         norm = normalize_text(query).strip()
         if "gracias" in norm:
             if active_student:
-                return f"¡Con mucho gusto, **{active_student.get('nombre')}**! 😊 Si necesitas consultar algo más sobre tu expediente o los reglamentos del IUTECP, aquí estoy para ayudarte."
-            return "¡Con mucho gusto! 😊 Si tienes otra consulta sobre admisión, sedes, carreras, pagos o reglamentos del IUTECP, escríbeme cuando quieras."
+                return f"¡Con mucho gusto, **{active_student.get('nombre')}**! 😊 Si necesitas consultar algo más sobre tu expediente o los reglamentos de la Universidad Nacional del Valle Alto (UNVA), aquí estoy para ayudarte."
+            return "¡Con mucho gusto! 😊 Si tienes otra consulta sobre admisión, sedes, carreras, pagos o reglamentos de la Universidad Nacional del Valle Alto (UNVA), escríbeme cuando quieras."
 
         if active_student:
             return (
@@ -222,19 +222,19 @@ class RAGEngine:
                 "• 🤝 Si cumples los requisitos para **Servicio Comunitario**\n"
                 "• 💼 Tu estatus de **Pasantías** y solvencias\n"
                 "• 💳 El estado de tus cuotas con **Cashea**\n"
-                "• 📋 Cualquier normativa o reglamento oficial del IUTECP\n\n"
+                "• 📋 Cualquier normativa o reglamento oficial de la Universidad Nacional del Valle Alto (UNVA)\n\n"
                 "¿En qué te puedo ayudar hoy?"
             )
 
         return (
-            "¡Hola! 👋 Soy el **Asistente Virtual Oficial del IUTECP** (Modo General).\n\n"
+            "¡Hola! 👋 Soy el **Asistente Virtual Oficial de la Universidad Nacional del Valle Alto (UNVA)** (Modo General).\n\n"
             "Puedo orientarte de inmediato sobre:\n"
             "• 📋 **Nuevo Ingreso:** requisitos, recaudos e inscripción en TernaNet\n"
             "• 🏢 **Sedes y Contacto:** Caracas, Guatire y Barcelona / Puerto La Cruz\n"
             "• 🎓 **Oferta Académica:** carreras TSU y turnos (diurno, nocturno, sabatino)\n"
             "• 💳 **Pagos y Cashea:** aranceles y financiamiento en cuotas\n"
             "• 📊 **Reglamentos:** escala de notas, cortes, pérdida por inasistencia (PI), servicio comunitario y pasantías\n\n"
-            "💡 *Si ya eres estudiante del IUTECP, puedes pulsar **Identificarme (TernaNet)** arriba o escribir tu cédula aquí para activar el modo personalizado con tu expediente.*"
+            "💡 *Si ya eres estudiante de la Universidad Nacional del Valle Alto (UNVA), puedes pulsar **Identificarme (TernaNet)** arriba o escribir tu cédula aquí para activar el modo personalizado con tu expediente.*"
         )
 
     def reload_documents(self) -> int:
@@ -406,7 +406,7 @@ class RAGEngine:
             history_text = "HISTORIAL RECIENTE DE LA CONVERSACIÓN:\n" + "\n".join(formatted_turns) + "\n\n"
 
         system_instruction = (
-            "Eres el Asistente Virtual Oficial del Instituto Universitario de Tecnología 'Elías Calixto Pompa' (IUTECP). "
+            "Eres el Asistente Virtual Oficial del Universidad Nacional del Valle Alto (UNVA). "
             "Tu misión es orientar con amabilidad, claridad y precisión a la comunidad estudiantil. "
             "REGLAS OBLIGATORIAS:\n"
             "1. Responde de forma clara y estructurada (usa viñetas o listas numeradas cuando explique requisitos o pasos).\n"
@@ -427,15 +427,15 @@ class RAGEngine:
                 f"{student_context}\n"
                 "DIRECTRICES OBLIGATORIAS PARA ESTE ESTUDIANTE:\n"
                 f"1. Dirígete cordialmente al estudiante por su nombre ('{active_student.get('nombre')}').\n"
-                "2. Cruza los requisitos y normativas del IUTECP (créditos exigidos, materias cursadas, semestres, prelaciones, servicio comunitario, pasantías, cuotas de Cashea y solvencias) DIRECTAMENTE con los datos reales de su expediente.\n"
-                "   - Ejemplo Servicio Comunitario: En el IUTECP se exige tener aprobado al menos el 50% de los créditos de la carrera. Verifica su porcentaje aprobado en el expediente e indícale con precisión si ya puede inscribirlo o cuántos créditos le faltan.\n"
+                "2. Cruza los requisitos y normativas de la Universidad Nacional del Valle Alto (UNVA) (créditos exigidos, materias cursadas, semestres, prelaciones, servicio comunitario, pasantías, cuotas de Cashea y solvencias) DIRECTAMENTE con los datos reales de su expediente.\n"
+                "   - Ejemplo Servicio Comunitario: En la Universidad Nacional del Valle Alto (UNVA) se exige tener aprobado al menos el 50% de los créditos de la carrera. Verifica su porcentaje aprobado en el expediente e indícale con precisión si ya puede inscribirlo o cuántos créditos le faltan.\n"
                 "   - Ejemplo Pasantías: Revisa si cumple con el avance de semestres/créditos y su estatus de pasantías.\n"
                 "   - Ejemplo Pagos/Cashea: Si consulta sobre pagos o matrícula, dile con precisión sus cuotas pagadas/pendientes y fechas.\n"
                 "3. Ofrece una orientación personalizada, motivadora y clara.\n"
                 "=======================================================\n"
             )
 
-        user_prompt = f"{history_text}{student_prompt_inject}CONTEXTO OFICIAL DEL IUTECP:\n{context_text}\n\nNUEVA PREGUNTA DEL ESTUDIANTE: {query}"
+        user_prompt = f"{history_text}{student_prompt_inject}CONTEXTO OFICIAL DEL UNVA:\n{context_text}\n\nNUEVA PREGUNTA DEL ESTUDIANTE: {query}"
         return system_instruction, user_prompt, unique_sources
 
     def generate_response(self, query: str, session_id: str = None, student_cedula: str = None) -> Dict[str, Any]:
@@ -468,7 +468,7 @@ class RAGEngine:
 
         # Solo retornar vacío si no hay contexto normativo NI perfil de estudiante activo
         if not contexts and not active_student:
-            msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
+            msg = "No encontré información relevante en los reglamentos y guías oficiales de la Universidad Nacional del Valle Alto (UNVA) para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
             return {
                 "answer": msg,
                 "sources": [],
@@ -602,7 +602,7 @@ class RAGEngine:
             return
 
         if not contexts and not active_student:
-            msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
+            msg = "No encontré información relevante en los reglamentos y guías oficiales de la Universidad Nacional del Valle Alto (UNVA) para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
             query_id = analytics.record_query(
                 query=query,
                 channel="web",
@@ -689,20 +689,20 @@ class RAGEngine:
                     f"• **Promedio acumulado:** {student.get('promedio')} / 20\n"
                     f"• **Estatus arancelario:** {student.get('estatus_arancelario')}"
                 )
-            return "No encontré información relevante en los reglamentos oficiales del IUTECP para tu consulta."
+            return "No encontré información relevante en los reglamentos oficiales de la Universidad Nacional del Valle Alto (UNVA) para tu consulta."
 
         key_terms = tokenize_bm25(query)
         best_doc = contexts[0]
-        intro = f"De acuerdo con la documentación oficial del **IUTECP** (en *{best_doc['source']}*):\n\n"
+        intro = f"De acuerdo con la documentación oficial del **UNVA** (en *{best_doc['source']}*):\n\n"
         if student:
-            intro = f"¡Hola, **{student.get('nombre')}**! 🎓 Revisando tu expediente en **TernaNet** ({student.get('carrera')}, {student.get('semestre')}do/to semestre) y la documentación oficial del **IUTECP**:\n\n"
+            intro = f"¡Hola, **{student.get('nombre')}**! 🎓 Revisando tu expediente en **TernaNet** ({student.get('carrera')}, {student.get('semestre')}do/to semestre) y la documentación oficial del **UNVA**:\n\n"
 
         all_sentences = []
         seen_texts = set()
 
         for c in contexts:
-            cleaned = re.sub(r'IUTECP Oficial\s*-\s*C[oó]digo:[^\|]+\|\s*P[aá]gina\s*\d+/\d+', '', c["content"])
-            cleaned = re.sub(r'INSTITUTO UNIVERSITARIO DE TECNOLOG[IÍ]A[^A-Z]+', '', cleaned)
+            cleaned = re.sub(r'UNVA Oficial\s*-\s*C[oó]digo:[^\|]+\|\s*P[aá]gina\s*\d+/\d+', '', c["content"])
+            cleaned = re.sub(r'UNIVERSIDAD NACIONAL DEL VALLE ALTO[^A-Z]+', '', cleaned)
             cleaned = re.sub(r'Direcci[oó]n Acad[eé]mica[^A-Z]+', '', cleaned)
 
             parts = re.split(r'(?:\. |\n+|(?=[1-9]\.\s)|(?=[•\-])|(?=Art[íi]culo\s+\d+))', cleaned)
@@ -750,12 +750,12 @@ class RAGEngine:
 
         part = types.Part.from_bytes(data=audio_bytes, mime_type=clean_mime)
         prompt = (
-            "Eres el transcriptor del Asistente Académico del Instituto Universitario de Tecnología 'Elías Calixto Pompa' (IUTECP) en Venezuela.\n"
+            "Eres el transcriptor del Asistente Académico del Universidad Nacional del Valle Alto (UNVA) en Venezuela.\n"
             "Tu tarea es transcribir textualmente en español la nota de voz o consulta enviada por el estudiante.\n\n"
             "GLOSARIO OBLIGATORIO Y REGLAS DE CORRECCIÓN FONÉTICA:\n"
-            "• 'Cashea': Método de pago en cuotas del IUTECP. Si el estudiante dice 'caché', 'cashe', 'cajea' o 'cash', DEBES transcribirlo como 'Cashea'.\n"
-            "• 'TernaNet': Sistema y portal del IUTECP. Si suena 'internet', 'ternanet', 'tierranet', transcribe 'TernaNet'.\n"
-            "• 'IUTECP': Siglas del instituto.\n"
+            "• 'Cashea': Método de pago en cuotas de la Universidad Nacional del Valle Alto (UNVA). Si el estudiante dice 'caché', 'cashe', 'cajea' o 'cash', DEBES transcribirlo como 'Cashea'.\n"
+            "• 'TernaNet': Sistema y portal de la Universidad Nacional del Valle Alto (UNVA). Si suena 'internet', 'ternanet', 'tierranet', transcribe 'TernaNet'.\n"
+            "• 'UNVA': Siglas del instituto.\n"
             "• 'PI': Pérdida de materia por inasistencias.\n"
             "• Sedes: Guatire, Caracas, Barcelona, Puerto La Cruz, Anzoátegui.\n"
             "• Carreras: Informática, Administración, Contaduría, Publicidad, Mercadeo.\n"

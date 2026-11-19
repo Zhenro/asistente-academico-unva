@@ -1,5 +1,5 @@
 """
-Módulo de Integración y Simulación de TernaNet para el IUTECP.
+Módulo de Integración y Simulación de TernaNet para la Universidad Nacional del Valle Alto (UNVA).
 Permite autenticación y consulta de expedientes académicos por Cédula de Identidad.
 """
 import re

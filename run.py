@@ -1,5 +1,5 @@
 """
-Punto de entrada principal para el Asistente Virtual IUTECP.
+Punto de entrada principal para el Asistente Virtual UNVA.
 Ejecuta:
     python run.py
 """
@@ -16,7 +16,7 @@ from src.config import DOCUMENTS_DIR
 
 def main():
     print("=" * 65)
-    print("  IUTECP - ASISTENTE VIRTUAL DE CONSULTAS ACADÉMICAS (RAG)  ")
+    print("  UNVA - ASISTENTE VIRTUAL DE CONSULTAS ACADÉMICAS (RAG)  ")
     print("=" * 65)
     
     pdf_files = list(DOCUMENTS_DIR.glob("*.pdf"))

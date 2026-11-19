@@ -1,14 +1,14 @@
-# Asistente Virtual Inteligente de Consultas Académicas (IUTECP)
+# Asistente Virtual Inteligente de Consultas Académicas (UNVA)
 
-Sistema integral de atención, orientación y resolución de consultas académicas e institucionales basado en **Generación Aumentada por Recuperación (RAG)** y modelos multimodales de última generación, diseñado para la comunidad estudiantil y secretaría del **Instituto Universitario de Tecnología "Elías Calixto Pompa" (IUTECP)**.
+Sistema integral de atención, orientación y resolución de consultas académicas e institucionales basado en **Generación Aumentada por Recuperación (RAG)** y modelos multimodales de última generación, diseñado para la comunidad estudiantil y secretaría de la **Universidad Nacional del Valle Alto (UNVA)**.
 
 ---
 
 ## 🌟 Características Principales del Sistema
 
-### 1. 🎙️ Asistencia Multimodal por Telegram (`@IutecpAsistenteBot`)
+### 1. 🎙️ Asistencia Multimodal por Telegram (`@UnvaAsistenteBot`)
 * Soporte para consultas en **texto** y **notas de voz** estudiantiles.
-* Transcripción fonética inteligente con **Google Gemini Multimodal** y glosario institucional (*Cashea*, *TernaNet*, *IUTECP*, *PI*, materias y sedes).
+* Transcripción fonética inteligente con **Google Gemini Multimodal** y glosario institucional (*Cashea*, *TernaNet*, *UNVA*, *PI*, materias y sedes).
 * Despacho asíncrono con respuesta inmediata para evitar tiempos de espera o cancelaciones de conexión.
 
 ### 2. 🎓 Perfil Estudiantil Personalizado (Integración TernaNet)
@@ -25,7 +25,7 @@ Sistema integral de atención, orientación y resolución de consultas académic
   * **Anibal Figuera** (`17.498.904`) · TSU Informática (Guatire)
 
 ### 3. 🔐 Panel Administrativo de Secretaría (`/admin`)
-* Acceso protegido por contraseña institucional (`iutecp2026`).
+* Acceso protegido por contraseña institucional (`unva2026`).
 * **Gestor de Documentos PDF:** Carga de nuevos reglamentos vía arrastrar y soltar (drag & drop), eliminación y visualización.
 * **Reindexación en Caliente (Hot-Reindex):** Actualización instantánea de la base de conocimiento vectorial sin reiniciar el servidor ni interrumpir a los usuarios.
 * **Padrón de Expedientes:** Inspección visual de los estudiantes registrados en TernaNet.
@@ -49,24 +49,24 @@ Sistema integral de atención, orientación y resolución de consultas académic
 
 ## 🏛️ Documentación Oficial Incorporada (`data/documents/`)
 
-1. **`01_Guia_Admisiones_Inscripcion_IUTECP.pdf`**:
+1. **`01_Guia_Admisiones_Inscripcion_UNVA.pdf`**:
    * Requisitos de nuevo ingreso en carpeta marrón (título de bachiller, notas, fotos, cédula, OPSU).
    * Procedimiento de 5 pasos en plataforma TernaNet.
    * Sedes: Guatire (C.C. Daymar), Caracas (El Paraíso), Puerto La Cruz, Barcelona y El Tigre.
    * Pagos por transferencia y cuotas con **Cashea**. Turnos diurno y sabatino.
-2. **`02_Reglamento_Evaluacion_Estudiantil_IUTECP.pdf`**:
+2. **`02_Reglamento_Evaluacion_Estudiantil_UNVA.pdf`**:
    * Evaluación continua (3 cortes: 30%, 30%, 40%).
    * Escala de 1 a 20 puntos, nota mínima aprobatoria: 10 puntos (redondeo de 0.5 solo en nota final).
    * Límite de inasistencias del 25% (Pérdida por Inasistencia - PI).
    * Normativa de prelaciones y retiro de asignaturas.
-3. **`03_Oferta_Academica_Carreras_IUTECP.pdf`**:
+3. **`03_Oferta_Academica_Carreras_UNVA.pdf`**:
    * Programas TSU: Informática, Diseño Gráfico, Administración, Contaduría, Relaciones Industriales, Turismo, Fisioterapia y Enfermería.
    * Prosecución a Licenciaturas e Ingenierías.
-4. **`04_Normativa_Servicio_Comunitario_Pasantias_Grado_IUTECP.pdf`**:
+4. **`04_Normativa_Servicio_Comunitario_Pasantias_Grado_UNVA.pdf`**:
    * Servicio Comunitario obligatorio (120 horas académicas, requisito de 50% de UC aprobadas).
    * Pasantías y Acreditación de Experiencia Laboral técnica.
    * Requisitos para acto de grado (solvencias de Control de Estudios, Biblioteca, Caja y fondo negro).
-5. **`05_Calendario_Academico_Periodos_IUTECP.pdf`**:
+5. **`05_Calendario_Academico_Periodos_UNVA.pdf`**:
    * Estructura de los 3 períodos anuales (I, II y III).
    * Cronograma de inscripciones, evaluaciones, entregas de solvencias y grados.
 
@@ -80,14 +80,14 @@ python run.py
 ```
 Abre en tu navegador:
 👉 **`http://127.0.0.1:8000`** (Asistente Web)
-👉 **`http://127.0.0.1:8000/admin`** (Panel Administrativo - Clave: `iutecp2026`)
+👉 **`http://127.0.0.1:8000/admin`** (Panel Administrativo - Clave: `unva2026`)
 
 ### 2. Configurar Claves de Entorno (`.env`)
 ```env
 GEMINI_API_KEY=tu_clave_de_google_aistudio
 GEMINI_MODEL=gemini-2.5-flash
 TELEGRAM_BOT_TOKEN=tu_token_de_botfather
-ADMIN_PASSWORD=iutecp2026
+ADMIN_PASSWORD=unva2026
 ```
 
 ---

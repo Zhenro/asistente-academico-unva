@@ -1,5 +1,5 @@
 """
-Bot de Telegram para el Asistente Académico IUTECP.
+Bot de Telegram para el Asistente Académico · Universidad Nacional del Valle Alto.
 Ejecuta:
     python scripts/telegram_bot.py
 """
@@ -45,14 +45,14 @@ def main():
         print("Pasos para obtener tu token en 1 minuto:")
         print("1. Abre Telegram y busca al usuario oficial: @BotFather")
         print("2. Escribe el comando: /newbot")
-        print("3. Asigna un nombre al bot (ej. Asistente IUTECP)")
-        print("4. Asigna un usuario terminado en 'bot' (ej. iutecp_asistente_bot)")
+        print("3. Asigna un nombre al bot (ej. Asistente UNVA)")
+        print("4. Asigna un usuario terminado en 'bot' (ej. unva_asistente_bot)")
         print("5. Copia el token que te da BotFather y colócalo en tu .env:")
         print("   TELEGRAM_BOT_TOKEN=tu_token_aqui\n")
         sys.exit(1)
 
     print("=" * 65)
-    print("  IUTECP - BOT DE TELEGRAM EN EJECUCIÓN (Polling Local)  ")
+    print("  UNVA - BOT DE TELEGRAM EN EJECUCIÓN (Polling Local)  ")
     print("=" * 65)
 
     # Eliminar cualquier webhook previo para permitir polling local
@@ -123,7 +123,7 @@ def main():
                 if text.startswith("/start"):
                     welcome = (
                         f"¡Hola {user_name}! 👋\n\n"
-                        "Soy el *Asistente Académico Oficial del IUTECP*.\n\n"
+                        "Soy el *Asistente Académico Oficial de la Universidad Nacional del Valle Alto (UNVA)*.\n\n"
                         "Puedes hacerme tus consultas por *texto* o enviarme una *nota de voz* 🎙️ sobre:\n"
                         "• 📋 Requisitos de nuevo ingreso\n"
                         "• 🏢 Sedes y teléfonos de atención\n"

@@ -1,5 +1,5 @@
 """
-Módulo de Analítica, Métricas de Satisfacción y Detección de Vacíos Normativos para el IUTECP.
+Módulo de Analítica, Métricas de Satisfacción y Detección de Vacíos Normativos para la Universidad Nacional del Valle Alto (UNVA).
 """
 import os
 import io

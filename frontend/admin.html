@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Secretaría Académica · IUTECP</title>
+  <title>Panel Secretaría Académica · Universidad Nacional del Valle Alto</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -761,8 +761,8 @@
   <!-- MODAL DE AUTENTICACIÓN -->
   <div class="login-overlay" id="loginModal">
     <div class="login-card">
-      <div class="brand-badge">IU</div>
-      <h2>Secretaría Académica IUTECP</h2>
+      <div class="brand-badge">UV</div>
+      <h2>Secretaría Académica · UNVA</h2>
       <p>Ingresa la clave administrativa para gestionar documentos RAG, analíticas y expedientes.</p>
       <form onsubmit="handleLogin(event)">
         <input
@@ -790,9 +790,9 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-badge">IU</div>
+        <div class="brand-badge">UV</div>
         <div class="brand-info">
-          <h1>IUTECP · Secretaría Académica</h1>
+          <h1>Universidad Nacional del Valle Alto · Secretaría Académica</h1>
           <p>Panel de Gestión de Conocimiento RAG y Analítica Institucional</p>
         </div>
       </div>
@@ -873,7 +873,7 @@
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </div>
           <div class="metric-data">
-            <h3 class="bot-handle">@IutecpAsistenteBot</h3>
+            <h3 class="bot-handle" id="statBotHandle">@UnvaAsistenteBot</h3>
             <p>Canal Telegram 24/7</p>
           </div>
         </div>
@@ -1154,7 +1154,7 @@
   <div class="toast-box" id="toastBox"></div>
 
   <script>
-    let adminToken = localStorage.getItem('iutecp_admin_key') || '';
+    let adminToken = localStorage.getItem('unva_admin_key') || '';
     let currentTab = 'docs';
     let cachedDocuments = [];
     let cachedStudents = [];
@@ -1174,7 +1174,7 @@
     }
 
     function getInitials(name) {
-      return String(name || 'IU').split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+      return String(name || 'UV').split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
     }
 
     function showToast(msg, type = 'info') {
@@ -1225,7 +1225,7 @@
         });
         if (res.ok) {
           adminToken = pass;
-          localStorage.setItem('iutecp_admin_key', adminToken);
+          localStorage.setItem('unva_admin_key', adminToken);
           document.getElementById('loginModal').style.display = 'none';
           document.getElementById('adminPassInput').value = '';
           showToast('Sesión administrativa iniciada', 'success');
@@ -1243,7 +1243,7 @@
 
     function logout() {
       adminToken = '';
-      localStorage.removeItem('iutecp_admin_key');
+      localStorage.removeItem('unva_admin_key');
       document.getElementById('loginModal').style.display = 'flex';
     }
 
@@ -1253,7 +1253,7 @@
           headers: { 'x-admin-key': adminToken }
         });
         if (res.status === 401) {
-          localStorage.removeItem('iutecp_admin_key');
+          localStorage.removeItem('unva_admin_key');
           adminToken = '';
           document.getElementById('loginModal').style.display = 'flex';
           return;
@@ -1262,6 +1262,7 @@
         cachedDocuments = data.documents || [];
         document.getElementById('statDocsCount').textContent = data.total_documents ?? 0;
         document.getElementById('statChunksCount').textContent = data.total_chunks ?? 0;
+        if (data.bot_username) document.getElementById('statBotHandle').textContent = '@' + data.bot_username;
         renderDocumentsRows(cachedDocuments);
       } catch (err) {
         showToast('No se pudo conectar con el servidor', 'error');
@@ -1278,6 +1279,7 @@
         cachedDocuments = data.documents || [];
         document.getElementById('statDocsCount').textContent = data.total_documents ?? 0;
         document.getElementById('statChunksCount').textContent = data.total_chunks ?? 0;
+        if (data.bot_username) document.getElementById('statBotHandle').textContent = '@' + data.bot_username;
         filterDocumentsTable();
       } catch (err) {
         showToast('Error cargando documentos', 'error');
@@ -1559,7 +1561,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'reporte_consultas_iutecp.csv';
+        a.download = 'reporte_consultas_unva.csv';
         document.body.appendChild(a);
         a.click();
         a.remove();

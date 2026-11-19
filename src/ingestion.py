@@ -47,9 +47,9 @@ def build_vector_store():
     emb_fn = embedding_functions.DefaultEmbeddingFunction()
     
     collection = client.get_or_create_collection(
-        name="iutecp_knowledge_base",
+        name="unva_knowledge_base",
         embedding_function=emb_fn,
-        metadata={"description": "Documentos normativos y guias oficiales IUTECP"}
+        metadata={"description": "Documentos normativos y guias oficiales UNVA"}
     )
     
     pdf_files = list(DOCUMENTS_DIR.glob("*.pdf"))

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>IUTECP - Asistente Académico Inteligente</title>
+  <title>UNVA - Asistente Académico Inteligente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -918,9 +918,9 @@
   <aside id="sidebarDrawer">
     <div class="aside-header">
       <div class="brand-group">
-        <div class="brand-badge">IU</div>
+        <div class="brand-badge">UV</div>
         <div class="brand-meta">
-          <h2>IUTECP</h2>
+          <h2>UNVA</h2>
           <span>Asistente Estudiantil Oficial</span>
         </div>
       </div>
@@ -931,11 +931,11 @@
       <div>
         <div class="section-label">Temas Frecuentes</div>
         <div style="display: flex; flex-direction: column; gap: 4px;">
-          <button class="menu-topic-btn" onclick="selectTopic('¿Cuáles son los requisitos obligatorios para nuevo ingreso en el IUTECP?')">
+          <button class="menu-topic-btn" onclick="selectTopic('¿Cuáles son los requisitos obligatorios para nuevo ingreso en la Universidad Nacional del Valle Alto (UNVA)?')">
             <span class="icon">📋</span>
             <span>Nuevo Ingreso y Recaudos</span>
           </button>
-          <button class="menu-topic-btn" onclick="selectTopic('¿Cuáles son las sedes del IUTECP, sus direcciones y contactos?')">
+          <button class="menu-topic-btn" onclick="selectTopic('¿Cuáles son las sedes de la Universidad Nacional del Valle Alto (UNVA), sus direcciones y contactos?')">
             <span class="icon">📍</span>
             <span>Sedes y Ubicaciones</span>
           </button>
@@ -1004,7 +1004,7 @@
           </svg>
         </button>
         <div class="header-titles">
-          <h1>Asistente Académico IUTECP</h1>
+          <h1>Asistente Académico · Universidad Nacional del Valle Alto</h1>
           <p>Consultas oficiales sobre admisión, notas, sedes y reglamentos</p>
         </div>
       </div>
@@ -1026,7 +1026,7 @@
       <!-- SWIPER RÁPIDO PARA TELÉFONOS -->
       <div class="mobile-quick-topics">
         <button class="quick-pill" onclick="selectTopic('¿Cuáles son los requisitos de nuevo ingreso para bachilleres?')">📋 Nuevo Ingreso</button>
-        <button class="quick-pill" onclick="selectTopic('¿Dónde quedan las sedes del IUTECP y sus contactos?')">📍 Sedes</button>
+        <button class="quick-pill" onclick="selectTopic('¿Dónde quedan las sedes de la Universidad Nacional del Valle Alto (UNVA) y sus contactos?')">📍 Sedes</button>
         <button class="quick-pill" onclick="selectTopic('¿Cómo se paga la matrícula con Cashea?')">💳 Cashea</button>
         <button class="quick-pill" onclick="selectTopic('¿Cuál es la nota mínima para aprobar y límite de inasistencias?')">⚖️ Notas y PI</button>
         <button class="quick-pill" onclick="selectTopic('¿Cuáles son los requisitos para inscribir servicio comunitario?')">🤝 Serv. Comunitario</button>
@@ -1037,7 +1037,7 @@
         <div class="welcome-top">
           <div class="welcome-icon">🎓</div>
           <div class="welcome-text">
-            <h3>¡Hola! Soy tu Asistente Académico IUTECP</h3>
+            <h3>¡Hola! Soy tu Asistente Académico · Universidad Nacional del Valle Alto</h3>
             <p>Pregúntame cualquier duda institucional o pulsa uno de los accesos directos para comenzar:</p>
           </div>
         </div>
@@ -1049,7 +1049,7 @@
             <span class="sub">Recaudos, carpeta y TernaNet</span>
           </div>
 
-          <div class="action-chip" onclick="selectTopic('¿Dónde están ubicadas las sedes del IUTECP y sus teléfonos?')">
+          <div class="action-chip" onclick="selectTopic('¿Dónde están ubicadas las sedes de la Universidad Nacional del Valle Alto (UNVA) y sus teléfonos?')">
             <span class="emoji">🏢</span>
             <span class="title">Sedes y Contacto</span>
             <span class="sub">Caracas, Guatire y Anzoátegui</span>
@@ -1073,7 +1073,7 @@
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.5rem;">🎓</span>
             <div>
-              <div style="font-size: 0.85rem; font-weight: 800; color: #1e3a8a;">¿Eres estudiante del IUTECP? Activa tu Perfil TernaNet</div>
+              <div style="font-size: 0.85rem; font-weight: 800; color: #1e3a8a;">¿Eres estudiante de la Universidad Nacional del Valle Alto (UNVA)? Activa tu Perfil TernaNet</div>
               <div style="font-size: 0.74rem; color: #3b82f6;">Consulta si puedes inscribir pasantías, servicio comunitario o el estatus de tus pagos.</div>
             </div>
           </div>
@@ -1172,12 +1172,12 @@
       backdrop.classList.remove('active');
     }
 
-    let currentSessionId = localStorage.getItem('iutecp_session_id') || ('sess_' + Math.random().toString(36).substring(2, 11));
-    localStorage.setItem('iutecp_session_id', currentSessionId);
+    let currentSessionId = localStorage.getItem('unva_session_id') || ('sess_' + Math.random().toString(36).substring(2, 11));
+    localStorage.setItem('unva_session_id', currentSessionId);
 
     let currentStudent = null;
     try {
-      currentStudent = JSON.parse(localStorage.getItem('iutecp_active_student') || 'null');
+      currentStudent = JSON.parse(localStorage.getItem('unva_active_student') || 'null');
     } catch (e) {
       currentStudent = null;
     }
@@ -1289,7 +1289,7 @@
 
     function setStudentActive(st) {
       currentStudent = st;
-      localStorage.setItem('iutecp_active_student', JSON.stringify(st));
+      localStorage.setItem('unva_active_student', JSON.stringify(st));
       updateStudentUI();
       fetch('/api/student/identify', {
         method: 'POST',
@@ -1301,7 +1301,7 @@
     async function logoutStudent(e) {
       if (e) e.stopPropagation();
       currentStudent = null;
-      localStorage.removeItem('iutecp_active_student');
+      localStorage.removeItem('unva_active_student');
       updateStudentUI();
       try {
         await fetch('/api/student/logout', {
@@ -1329,7 +1329,7 @@
       closeDrawer();
       const oldSessionId = currentSessionId;
       currentSessionId = 'sess_' + Math.random().toString(36).substring(2, 11);
-      localStorage.setItem('iutecp_session_id', currentSessionId);
+      localStorage.setItem('unva_session_id', currentSessionId);
 
       chatScroll.innerHTML = '';
       if (heroWelcome) {
@@ -1455,7 +1455,7 @@
               if (event.type === 'start') {
                 if (event.student && (!currentStudent || currentStudent.cedula !== event.student.cedula)) {
                   currentStudent = event.student;
-                  localStorage.setItem('iutecp_active_student', JSON.stringify(event.student));
+                  localStorage.setItem('unva_active_student', JSON.stringify(event.student));
                   updateStudentUI();
                 }
               } else if (event.type === 'token') {
@@ -1486,7 +1486,7 @@
 
           if (finalStudent && (!currentStudent || currentStudent.cedula !== finalStudent.cedula)) {
             currentStudent = finalStudent;
-            localStorage.setItem('iutecp_active_student', JSON.stringify(finalStudent));
+            localStorage.setItem('unva_active_student', JSON.stringify(finalStudent));
             updateStudentUI();
           }
 
@@ -1512,7 +1512,7 @@
           if (fallbackRes.ok) {
             if (data.student && (!currentStudent || currentStudent.cedula !== data.student.cedula)) {
               currentStudent = data.student;
-              localStorage.setItem('iutecp_active_student', JSON.stringify(data.student));
+              localStorage.setItem('unva_active_student', JSON.stringify(data.student));
               updateStudentUI();
             }
             appendBubble('bot', data.answer, data.sources, data.query_id);
@@ -1541,7 +1541,7 @@
 
       const avatar = document.createElement('div');
       avatar.className = 'avatar-icon';
-      avatar.textContent = 'IU';
+      avatar.textContent = 'UV';
 
       const contentBox = document.createElement('div');
       contentBox.className = 'bubble-content';
@@ -1639,7 +1639,7 @@
 
       const avatar = document.createElement('div');
       avatar.className = 'avatar-icon';
-      avatar.textContent = role === 'bot' ? 'IU' : 'TÚ';
+      avatar.textContent = role === 'bot' ? 'UV' : 'TÚ';
 
       const contentBox = document.createElement('div');
       contentBox.className = 'bubble-content';
@@ -1743,7 +1743,7 @@
       const row = document.createElement('div');
       row.className = 'chat-bubble-row bot';
       row.innerHTML = `
-        <div class="avatar-icon">IU</div>
+        <div class="avatar-icon">UV</div>
         <div class="bubble-content">
           <div class="typing-container">
             <div class="typing-dot"></div>

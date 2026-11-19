@@ -1,5 +1,5 @@
 """
-Suite de pruebas automatizadas para el Asistente Virtual Académico IUTECP.
+Suite de pruebas automatizadas para el Asistente Virtual Académico UNVA.
 Ejecutar con:
     python -m unittest discover -s tests -v
 """
@@ -20,7 +20,7 @@ from src.rag_engine import RAGEngine, rag_engine, normalize_text, tokenize_bm25
 class TestBM25AndRAG(unittest.TestCase):
     def test_normalize_text_removes_accents(self):
         self.assertEqual(normalize_text("Evaluación y Pasantías"), "evaluacion y pasantias")
-        self.assertEqual(normalize_text("Inscripción IUTECP"), "inscripcion iutecp")
+        self.assertEqual(normalize_text("Inscripción UNVA"), "inscripcion unva")
 
     def test_tokenize_filters_stopwords_and_keeps_pi(self):
         tokens = tokenize_bm25("¿Cómo funciona el PI en la evaluación?")
@@ -134,7 +134,7 @@ class TestAPIEndpoints(unittest.TestCase):
         # Forzar síntesis local para prueba determinista y rápida sin consumir cuota de API
         with patch("src.rag_engine.gemini_client", None):
             res = self.client.post("/api/chat/stream", json={
-                "message": "¿Cuáles son las sedes del IUTECP?",
+                "message": "¿Cuáles son las sedes de la Universidad Nacional del Valle Alto (UNVA)?",
                 "session_id": "test_stream_session"
             })
             self.assertEqual(res.status_code, 200)
@@ -167,9 +167,9 @@ class TestAPIEndpoints(unittest.TestCase):
     def test_rate_limiting_triggers_429(self):
         with patch.object(api_module, "RATE_LIMIT_MAX_REQUESTS", 2):
             with patch("src.rag_engine.gemini_client", None):
-                r1 = self.client.post("/api/chat", json={"message": "sedes del iutecp"})
-                r2 = self.client.post("/api/chat", json={"message": "sedes del iutecp"})
-                r3 = self.client.post("/api/chat", json={"message": "sedes del iutecp"})
+                r1 = self.client.post("/api/chat", json={"message": "sedes del unva"})
+                r2 = self.client.post("/api/chat", json={"message": "sedes del unva"})
+                r3 = self.client.post("/api/chat", json={"message": "sedes del unva"})
                 self.assertEqual(r1.status_code, 200)
                 self.assertEqual(r2.status_code, 200)
                 self.assertEqual(r3.status_code, 429)

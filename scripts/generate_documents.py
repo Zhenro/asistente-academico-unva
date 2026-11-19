@@ -12,7 +12,7 @@ class InstitutionalPDF(FPDF):
     def header(self):
         self.set_font("helvetica", "B", 10)
         self.set_text_color(20, 50, 100)
-        self.cell(0, 6, "INSTITUTO UNIVERSITARIO DE TECNOLOGÍA 'ELÍAS CALIXTO POMPA' (IUTECP)", align="C", new_x="LMARGIN", new_y="NEXT")
+        self.cell(0, 6, "UNIVERSIDAD NACIONAL DEL VALLE ALTO (UNVA)", align="C", new_x="LMARGIN", new_y="NEXT")
         self.set_font("helvetica", "I", 8)
         self.set_text_color(100, 100, 100)
         self.cell(0, 5, "Dirección Académica y Coordinación de Control de Estudios - Documentación Oficial", align="C", new_x="LMARGIN", new_y="NEXT")
@@ -25,7 +25,7 @@ class InstitutionalPDF(FPDF):
         self.set_y(-15)
         self.set_font("helvetica", "I", 8)
         self.set_text_color(120, 120, 120)
-        self.cell(0, 10, f"IUTECP Oficial - Código: {self.document_code} | Página {self.page_no()}/{{nb}}", align="C")
+        self.cell(0, 10, f"UNVA Oficial - Código: {self.document_code} | Página {self.page_no()}/{{nb}}", align="C")
 
     def chapter_title(self, label):
         self.set_font("helvetica", "B", 14)
@@ -60,23 +60,23 @@ class InstitutionalPDF(FPDF):
 
 
 def create_doc1(output_dir):
-    pdf = InstitutionalPDF("GUIA DE ADMISIONES E INSCRIPCION", "IUTECP-ADM-2026")
+    pdf = InstitutionalPDF("GUIA DE ADMISIONES E INSCRIPCION", "UNVA-ADM-2026")
     pdf.chapter_title("GUÍA OFICIAL DE ADMISIONES, INSCRIPCIÓN Y NORMAS DE MATRÍCULA")
     
-    pdf.section_title("1. Información General y Sedes del IUTECP")
+    pdf.section_title("1. Información General y Sedes de la Universidad Nacional del Valle Alto (UNVA)")
     pdf.body_paragraph(
-        "El Instituto Universitario de Tecnología 'Elías Calixto Pompa' (IUTECP) es una institución universitaria venezolana "
+        "El Universidad Nacional del Valle Alto (UNVA) es una institución universitaria venezolana "
         "dedicada a la formación de Técnicos Superiores Universitarios (TSU) y prosecución académica. La institución cuenta con "
         "las siguientes sedes activas:"
     )
     pdf.bullet_item("Sede Guatire:", "Av. Principal, C.C. Daymar, Nivel P1, Local P1-50, Urbanización Valle Arriba, Sector Quemaito, Guatire, Estado Miranda. Teléfonos: 0412-8973480 / 0412-7148130.")
-    pdf.bullet_item("Sede Caracas:", "Av. Estadio, Edificio IUTECP, adyacente al Estadio Nacional Brígido Iriarte, El Paraíso, Caracas, Dto. Capital.")
+    pdf.bullet_item("Sede Caracas:", "Av. Estadio, Edificio UNVA, adyacente al Estadio Nacional Brígido Iriarte, El Paraíso, Caracas, Dto. Capital.")
     pdf.bullet_item("Sedes Oriente:", "Sede Puerto La Cruz, Sede Barcelona y Sede El Tigre (Estado Anzoátegui).")
     
     pdf.ln(3)
     pdf.section_title("2. Requisitos de Inscripción para Nuevos Ingresos (Bachilleres)")
     pdf.body_paragraph(
-        "Todo aspirante que desee cursar estudios regulares de TSU en el IUTECP debe presentar en carpeta marrón tamaño oficio "
+        "Todo aspirante que desee cursar estudios regulares de TSU en la Universidad Nacional del Valle Alto (UNVA) debe presentar en carpeta marrón tamaño oficio "
         "con gancho los siguientes recaudos obligatorios ante la Coordinación de Control de Estudios:"
     )
     pdf.bullet_item("1. Cédula de Identidad:", "Original y dos (2) copias ampliadas y legibles.")
@@ -90,7 +90,7 @@ def create_doc1(output_dir):
     pdf.ln(3)
     pdf.section_title("3. Procedimiento Digital en la Plataforma TernaNet")
     pdf.body_paragraph(
-        "La gestión académica del IUTECP se realiza a través de la plataforma TernaNet (www.iutecp.net / portal TernaNet). "
+        "La gestión académica de la Universidad Nacional del Valle Alto (UNVA) se realiza a través de la plataforma TernaNet (www.unva.edu.ve / portal TernaNet). "
         "El estudiante debe seguir estos pasos:"
     )
     pdf.bullet_item("Paso 1 - Registro de Aspirante:", "Crear usuario en TernaNet con correo electrónico activo y número de cédula.")
@@ -102,26 +102,26 @@ def create_doc1(output_dir):
     pdf.ln(3)
     pdf.section_title("4. Horarios, Modalidades y Métodos de Pago")
     pdf.body_paragraph(
-        "El IUTECP ofrece tres modalidades de horario: Turno Mañana (7:30 am a 12:30 pm), Turno Tarde (1:00 pm a 5:30 pm) y Turno Sabatino "
-        "orientado a profesionales y trabajadores (7:30 am a 4:30 pm los días sábados). También se cuenta con soporte en el Campus Virtual (academia.campusiutecp.com)."
+        "La Universidad Nacional del Valle Alto (UNVA) ofrece tres modalidades de horario: Turno Mañana (7:30 am a 12:30 pm), Turno Tarde (1:00 pm a 5:30 pm) y Turno Sabatino "
+        "orientado a profesionales y trabajadores (7:30 am a 4:30 pm los días sábados). También se cuenta con soporte en el Campus Virtual (campus.unva.edu.ve)."
     )
     pdf.body_paragraph(
         "Opciones de Pago Oficiales: Pagos mediante transferencias bancarias a las cuentas institucionales oficiales, taquillas de caja en sede, "
         "y opción de financiamiento fraccionado de matrícula y mensualidades a través de la aplicación Cashea."
     )
     
-    path = os.path.join(output_dir, "01_Guia_Admisiones_Inscripcion_IUTECP.pdf")
+    path = os.path.join(output_dir, "01_Guia_Admisiones_Inscripcion_UNVA.pdf")
     pdf.output(path)
     print(f"Generado: {path}")
 
 
 def create_doc2(output_dir):
-    pdf = InstitutionalPDF("REGLAMENTO DE EVALUACION ESTUDIANTIL", "IUTECP-REG-EVAL")
+    pdf = InstitutionalPDF("REGLAMENTO DE EVALUACION ESTUDIANTIL", "UNVA-REG-EVAL")
     pdf.chapter_title("REGLAMENTO GENERAL DE EVALUACIÓN DEL RENDIMIENTO ESTUDIANTIL")
 
     pdf.section_title("Capítulo I: Principios de la Evaluación y Planificación Docente")
     pdf.body_paragraph(
-        "Artículo 1. La evaluación del rendimiento estudiantil en el IUTECP es continua, formativa, acumulativa, integral y sistemática. "
+        "Artículo 1. La evaluación del rendimiento estudiantil en la Universidad Nacional del Valle Alto (UNVA) es continua, formativa, acumulativa, integral y sistemática. "
         "Tiene como propósito certificar el logro de las competencias de cada unidad curricular."
     )
     pdf.body_paragraph(
@@ -172,18 +172,18 @@ def create_doc2(output_dir):
         "con índice académico destacado (igual o superior a 16.00 puntos) podrán solicitar una carga extraordinaria de hasta 3 UC adicionales."
     )
 
-    path = os.path.join(output_dir, "02_Reglamento_Evaluacion_Estudiantil_IUTECP.pdf")
+    path = os.path.join(output_dir, "02_Reglamento_Evaluacion_Estudiantil_UNVA.pdf")
     pdf.output(path)
     print(f"Generado: {path}")
 
 
 def create_doc3(output_dir):
-    pdf = InstitutionalPDF("OFERTA ACADEMICA Y CARRERAS TSU", "IUTECP-OFERTA-ACAD")
-    pdf.chapter_title("OFERTA ACADÉMICA OFICIAL Y PERFILES PROFESIONALES IUTECP")
+    pdf = InstitutionalPDF("OFERTA ACADEMICA Y CARRERAS TSU", "UNVA-OFERTA-ACAD")
+    pdf.chapter_title("OFERTA ACADÉMICA OFICIAL Y PERFILES PROFESIONALES UNVA")
 
     pdf.section_title("1. Estructura General de los Estudios")
     pdf.body_paragraph(
-        "Los programas académicos del IUTECP conducen a la obtención del título oficial de Técnico Superior Universitario (TSU). "
+        "Los programas académicos de la Universidad Nacional del Valle Alto (UNVA) conducen a la obtención del título oficial de Técnico Superior Universitario (TSU). "
         "Tienen una duración regular de seis (6) períodos académicos (3 años de estudio), organizados en modalidad trimestral/semestral, "
         "con posibilidad de prosecución a Licenciaturas e Ingenierías a través de convenios universitarios."
     )
@@ -216,18 +216,18 @@ def create_doc3(output_dir):
     pdf.ln(3)
     pdf.section_title("5. Prosecución a Licenciatura")
     pdf.body_paragraph(
-        "Los egresados de TSU del IUTECP tienen acceso directo a programas de prosecución académica mediante convenios con instituciones "
+        "Los egresados de TSU de la Universidad Nacional del Valle Alto (UNVA) tienen acceso directo a programas de prosecución académica mediante convenios con instituciones "
         "universitarias aliadas para culminar los títulos de Licenciado en Administración, Licenciado en Contaduría Pública o Ingeniero en Sistemas "
         "en lapsos reducidos de 3 a 4 períodos adicionales."
     )
 
-    path = os.path.join(output_dir, "03_Oferta_Academica_Carreras_IUTECP.pdf")
+    path = os.path.join(output_dir, "03_Oferta_Academica_Carreras_UNVA.pdf")
     pdf.output(path)
     print(f"Generado: {path}")
 
 
 def create_doc4(output_dir):
-    pdf = InstitutionalPDF("SERVICIO COMUNITARIO, PASANTIAS Y GRADO", "IUTECP-SC-PAS-GRAD")
+    pdf = InstitutionalPDF("SERVICIO COMUNITARIO, PASANTIAS Y GRADO", "UNVA-SC-PAS-GRAD")
     pdf.chapter_title("NORMATIVA DE SERVICIO COMUNITARIO, PASANTÍAS Y REQUISITOS DE GRADO")
 
     pdf.section_title("Título I: Servicio Comunitario del Estudiante Universitario")
@@ -250,7 +250,7 @@ def create_doc4(output_dir):
     pdf.section_title("Título II: Pasantías Profesionales y Acreditación de Experiencia Laboral")
     pdf.body_paragraph(
         "Artículo 4. Las Pasantías Profesionales representan el período de práctica técnica en una organización o empresa pública o privada, "
-        "cursándose en el sexto (6to) período de la carrera. Se asignará un Tutor Académico (docente IUTECP) y un Tutor Empresarial."
+        "cursándose en el sexto (6to) período de la carrera. Se asignará un Tutor Académico (docente UNVA) y un Tutor Empresarial."
     )
     pdf.body_paragraph(
         "Artículo 5. Modalidad de Acreditación de Experiencia Laboral: Aquellos estudiantes que se encuentren laborando de manera activa en "
@@ -262,7 +262,7 @@ def create_doc4(output_dir):
     pdf.ln(3)
     pdf.section_title("Título III: Requisitos Obligatorios para Optar al Título de Grado")
     pdf.body_paragraph(
-        "Artículo 6. Para ser proclamado Técnico Superior Universitario y participar en el Acto Solemne de Grado del IUTECP, el estudiante "
+        "Artículo 6. Para ser proclamado Técnico Superior Universitario y participar en el Acto Solemne de Grado de la Universidad Nacional del Valle Alto (UNVA), el estudiante "
         "debe cumplir y consignar los siguientes recaudos en la fecha estipulada por la Secretaría General:"
     )
     pdf.bullet_item("1. Récord Académico Completo:", "Haber aprobado la totalidad del 100% de las materias y unidades crédito del pensum.")
@@ -273,18 +273,18 @@ def create_doc4(output_dir):
     pdf.bullet_item("6. Solvencia Administrativa y Caja:", "Paz y salvo de aranceles de matrícula, cuotas y aranceles de derecho a grado.")
     pdf.bullet_item("7. Fotografías de Grado:", "Dos (2) fotos tamaño carnet con vestimenta formal para el registro del título y libro de actas.")
 
-    path = os.path.join(output_dir, "04_Normativa_Servicio_Comunitario_Pasantias_Grado_IUTECP.pdf")
+    path = os.path.join(output_dir, "04_Normativa_Servicio_Comunitario_Pasantias_Grado_UNVA.pdf")
     pdf.output(path)
     print(f"Generado: {path}")
 
 
 def create_doc5(output_dir):
-    pdf = InstitutionalPDF("CALENDARIO ACADEMICO OFICIAL", "IUTECP-CAL-2026")
+    pdf = InstitutionalPDF("CALENDARIO ACADEMICO OFICIAL", "UNVA-CAL-2026")
     pdf.chapter_title("CRONOGRAMA Y CALENDARIO ACADÉMICO OFICIAL ANUAL")
 
     pdf.section_title("1. Organización de los Períodos Académicos")
     pdf.body_paragraph(
-        "El año académico del IUTECP se organiza en tres (3) períodos regulares de catorce (14) a dieciséis (16) semanas lectivas cada uno:"
+        "El año académico de la Universidad Nacional del Valle Alto (UNVA) se organiza en tres (3) períodos regulares de catorce (14) a dieciséis (16) semanas lectivas cada uno:"
     )
     pdf.bullet_item("Período I:", "Inicia en Enero y culmina en Abril.")
     pdf.bullet_item("Período II:", "Inicia en Mayo y culmina en Agosto.")
@@ -311,7 +311,7 @@ def create_doc5(output_dir):
         "y los días sábados de 8:30 am a 1:00 pm."
     )
 
-    path = os.path.join(output_dir, "05_Calendario_Academico_Periodos_IUTECP.pdf")
+    path = os.path.join(output_dir, "05_Calendario_Academico_Periodos_UNVA.pdf")
     pdf.output(path)
     print(f"Generado: {path}")
 
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     docs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "documents")
     os.makedirs(docs_dir, exist_ok=True)
     
-    print(f"Generando documentos oficiales del IUTECP en: {docs_dir}")
+    print(f"Generando documentos oficiales de la Universidad Nacional del Valle Alto (UNVA) en: {docs_dir}")
     create_doc1(docs_dir)
     create_doc2(docs_dir)
     create_doc3(docs_dir)
