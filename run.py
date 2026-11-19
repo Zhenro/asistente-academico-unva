@@ -12,21 +12,18 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
-from src.config import DOCUMENTS_DIR, CHROMA_DB_DIR
-from src.ingestion import build_vector_store
+from src.config import DOCUMENTS_DIR
 
 def main():
     print("=" * 65)
     print("  IUTECP - ASISTENTE VIRTUAL DE CONSULTAS ACADÉMICAS (RAG)  ")
     print("=" * 65)
     
-    # Check if vector db exists or needs indexing
-    chroma_sqlite = CHROMA_DB_DIR / "chroma.sqlite3"
-    if not chroma_sqlite.exists() or len(list(DOCUMENTS_DIR.glob("*.pdf"))) == 0:
-        print("[*] Base de datos vectorial no detectada o vacía. Iniciando indexación...")
-        build_vector_store()
+    pdf_files = list(DOCUMENTS_DIR.glob("*.pdf"))
+    if not pdf_files:
+        print("[!] No se detectaron PDFs en data/documents/. Ejecuta: python scripts/generate_documents.py")
     else:
-        print(f"[+] Base vectorial detectada en: {CHROMA_DB_DIR}")
+        print(f"[+] {len(pdf_files)} documentos oficiales detectados en: {DOCUMENTS_DIR}")
 
     print("\n[+] Iniciando servidor web en: http://127.0.0.1:8000")
     print("[+] Abre tu navegador para interactuar con el Asistente Virtual")

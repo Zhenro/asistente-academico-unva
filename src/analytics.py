@@ -4,6 +4,8 @@ Módulo de Analítica, Métricas de Satisfacción y Detección de Vacíos Normat
 import os
 import json
 import uuid
+import threading
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -14,6 +16,7 @@ except ImportError:
     from config import DATA_DIR
 
 ANALYTICS_FILE = DATA_DIR / "analytics.json"
+_ANALYTICS_LOCK = threading.Lock()
 
 
 def _load_data() -> Dict[str, Any]:
@@ -29,9 +32,18 @@ def _load_data() -> Dict[str, Any]:
 
 
 def _save_data(data: Dict[str, Any]):
+    """Escritura atómica para evitar corrupción de analytics.json bajo concurrencia."""
     try:
-        with open(ANALYTICS_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        ANALYTICS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(dir=str(ANALYTICS_FILE.parent), suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp_path, ANALYTICS_FILE)
+        except Exception:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
     except Exception as e:
         print(f"[!] Error guardando analytics.json: {e}")
 
@@ -90,29 +102,31 @@ def record_query(query: str, channel: str, answer: str, sources: List[str]) -> s
         "comment": None
     }
 
-    data = _load_data()
-    data.setdefault("queries", [])
-    data["queries"].append(entry)
-    
-    # Mantener máximo 500 registros para optimizar memoria y disco
-    if len(data["queries"]) > 500:
-        data["queries"] = data["queries"][-500:]
+    with _ANALYTICS_LOCK:
+        data = _load_data()
+        data.setdefault("queries", [])
+        data["queries"].append(entry)
 
-    _save_data(data)
+        # Mantener máximo 500 registros para optimizar memoria y disco
+        if len(data["queries"]) > 500:
+            data["queries"] = data["queries"][-500:]
+
+        _save_data(data)
     return query_id
 
 
 def record_feedback(query_id: str, rating: str, comment: Optional[str] = None) -> bool:
     """Registra calificación (up o down) para una consulta dada."""
-    data = _load_data()
-    queries = data.get("queries", [])
-    for q in reversed(queries):
-        if q.get("id") == query_id:
-            q["rating"] = rating
-            if comment:
-                q["comment"] = comment.strip()
-            _save_data(data)
-            return True
+    with _ANALYTICS_LOCK:
+        data = _load_data()
+        queries = data.get("queries", [])
+        for q in reversed(queries):
+            if q.get("id") == query_id:
+                q["rating"] = rating
+                if comment:
+                    q["comment"] = comment.strip()
+                _save_data(data)
+                return True
     return False
 
 
@@ -206,4 +220,5 @@ def export_csv() -> str:
 
 def reset_analytics():
     """Borra el historial de analítica."""
-    _save_data({"queries": []})
+    with _ANALYTICS_LOCK:
+        _save_data({"queries": []})

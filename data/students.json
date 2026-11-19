@@ -185,5 +185,79 @@
       "control_estudios": true,
       "general_grado": true
     }
+  },
+  {
+    "cedula": "30771246",
+    "cedula_formato": "V-30.771.246",
+    "nombre": "Félix Ruiz",
+    "carrera": "TSU en Publicidad y Mercadeo",
+    "sede": "Guatire",
+    "semestre": 4,
+    "turno": "Nocturno",
+    "creditos_aprobados": 58,
+    "creditos_totales": 98,
+    "porcentaje_carrera": 59.2,
+    "promedio": 16.80,
+    "materias_actuales": [
+      { "codigo": "PUB-401", "nombre": "Campañas Publicitarias II", "nota_acumulada": 17 },
+      { "codigo": "MER-402", "nombre": "Investigación de Mercados", "nota_acumulada": 16 },
+      { "codigo": "PUB-403", "nombre": "Marketing Digital y Redes Sociales", "nota_acumulada": 18 }
+    ],
+    "servicio_comunitario": {
+      "estatus": "En curso",
+      "horas_certificadas": 65,
+      "proyecto": "Estrategia de Comunicación Digital para Emprendedores de Zamora"
+    },
+    "pasantias": {
+      "estatus": "Pendiente",
+      "observacion": "Habilitado para inscribir al finalizar el 5to semestre."
+    },
+    "estatus_arancelario": "Solvente (Cuota Cashea 2/3 al día)",
+    "cashea": {
+      "plan": "3 cuotas sin interés",
+      "cuotas_pagadas": 2,
+      "cuotas_totales": 3,
+      "proximo_vencimiento": "05/12/2026"
+    },
+    "solvencias": {
+      "biblioteca": true,
+      "caja": true,
+      "control_estudios": true
+    }
+  },
+  {
+    "cedula": "31418461",
+    "cedula_formato": "V-31.418.461",
+    "nombre": "Paola Rada",
+    "carrera": "TSU en Informática",
+    "sede": "Barcelona / Puerto La Cruz",
+    "semestre": 3,
+    "turno": "Diurno",
+    "creditos_aprobados": 44,
+    "creditos_totales": 105,
+    "porcentaje_carrera": 41.9,
+    "promedio": 18.65,
+    "distincion": "Cuadro de Honor Sede Anzoátegui",
+    "materias_actuales": [
+      { "codigo": "INF-301", "nombre": "Programación Web Front-End", "nota_acumulada": 19 },
+      { "codigo": "INF-302", "nombre": "Base de Datos I", "nota_acumulada": 18 },
+      { "codigo": "INF-303", "nombre": "Estadística Aplicada", "nota_acumulada": 19 }
+    ],
+    "servicio_comunitario": {
+      "estatus": "No habilitado",
+      "horas_certificadas": 0,
+      "observacion": "Requiere 53 créditos (50%). Lleva 44 créditos (faltan 9 créditos para habilitarse)."
+    },
+    "pasantias": {
+      "estatus": "Pendiente",
+      "observacion": "Se cursa a partir del 6to semestre."
+    },
+    "estatus_arancelario": "Solvente (Pago único semestral con descuento pronto pago)",
+    "cashea": null,
+    "solvencias": {
+      "biblioteca": true,
+      "caja": true,
+      "control_estudios": true
+    }
   }
 ]

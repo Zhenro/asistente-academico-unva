@@ -24,27 +24,25 @@ from typing import List, Optional, Dict, Any
 try:
     from src.config import FRONTEND_DIR, DOCUMENTS_DIR
     from src.rag_engine import rag_engine
-    from src.ingestion import build_vector_store
     import src.analytics as analytics
     import src.ternanet as ternanet
 except ImportError:
     from config import FRONTEND_DIR, DOCUMENTS_DIR
     from rag_engine import rag_engine
-    from ingestion import build_vector_store
     import analytics
     import ternanet
 
 app = FastAPI(
     title="IUTECP - Asistente Virtual Académico",
     description="API RAG para resolución de consultas estudiantiles e institucionales del IUTECP",
-    version="1.0.0"
+    version="2.0.0"
 )
 
-# CORS Middleware
+# CORS Middleware (sin allow_credentials con wildcard para evitar exposición insegura)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -463,7 +461,7 @@ async def telegram_setup():
 
     webhook_target = f"{ext_url.rstrip('/')}/api/telegram-webhook"
     try:
-        result = telegram_api_call(token, f"setWebhook?url={webhook_target}", timeout=25)
+        result = await telegram_api_call(token, f"setWebhook?url={webhook_target}", timeout=25)
         return {"status": "success", "webhook_target": webhook_target, "telegram_response": result}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -609,7 +607,8 @@ async def list_documents():
 
 
 @app.post("/api/reindex")
-async def trigger_reindex():
+async def trigger_reindex(x_admin_key: Optional[str] = Header(None)):
+    verify_admin(x_admin_key)
     try:
         count = rag_engine.reload_documents()
         return {"status": "success", "message": f"Se reindexaron {count} fragmentos con éxito."}

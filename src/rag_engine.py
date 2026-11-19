@@ -1,13 +1,16 @@
 import os
 import re
+import math
 import time
 import json
 import asyncio
-from typing import List, Dict, Any, Optional, AsyncGenerator
+import unicodedata
+from collections import Counter
+from typing import List, Dict, Any, Optional, AsyncGenerator, Tuple
 
 try:
     from src.config import (
-        TOP_K_RESULTS, GEMINI_API_KEY, 
+        TOP_K_RESULTS, GEMINI_API_KEY,
         GEMINI_MODEL, OPENAI_API_KEY, OPENAI_MODEL
     )
     from src.ternanet import (
@@ -17,7 +20,7 @@ try:
     import src.analytics as analytics
 except ImportError:
     from config import (
-        TOP_K_RESULTS, GEMINI_API_KEY, 
+        TOP_K_RESULTS, GEMINI_API_KEY,
         GEMINI_MODEL, OPENAI_API_KEY, OPENAI_MODEL
     )
     from ternanet import (
@@ -42,10 +45,42 @@ try:
 except ImportError:
     HAS_OPENAI = False
 
+# Stopwords en español para indexación y búsqueda BM25
+SPANISH_STOPWORDS = {
+    "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "al",
+    "en", "por", "para", "con", "sin", "sobre", "entre", "hasta", "desde",
+    "que", "como", "cual", "cuales", "donde", "cuando", "cuanto", "cuantos",
+    "cuantas", "quien", "quienes", "es", "son", "fue", "era", "esta", "estan",
+    "estoy", "hay", "ser", "estar", "tener", "tengo", "puede", "puedo", "pueden",
+    "mi", "mis", "me", "te", "se", "su", "sus", "nos", "le", "les", "lo",
+    "este", "esta", "estos", "estas", "ese", "esa", "esos", "esas", "eso",
+    "y", "o", "u", "e", "a", "si", "no", "ni", "mas", "pero", "muy", "ya",
+    "hola", "buenos", "buenas", "dias", "tardes", "noches", "gracias", "favor",
+    "quiero", "saber", "necesito", "informacion", "dime", "ayuda", "consulta"
+}
+
+
+def normalize_text(text: str) -> str:
+    """Elimina tildes/diacríticos y convierte a minúsculas para búsqueda insensible a acentos."""
+    if not text:
+        return ""
+    nfkd = unicodedata.normalize("NFKD", text.lower())
+    return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
+
+
+def tokenize_bm25(text: str) -> List[str]:
+    """Tokeniza texto normalizado eliminando puntuación, tokens muy cortos y stopwords."""
+    norm = normalize_text(text)
+    tokens = re.findall(r"[a-z0-9]+", norm)
+    # Conservar siglas académicas clave de 2 letras como 'pi' (Pérdida por Inasistencia)
+    return [t for t in tokens if (len(t) > 2 or t in {"pi"}) and t not in SPANISH_STOPWORDS]
+
 
 class RAGEngine:
     def __init__(self):
-        self._cached_chunks = None
+        self._cached_chunks: Optional[List[Dict[str, Any]]] = None
+        self._bm25_df: Dict[str, int] = {}
+        self._bm25_avgdl: float = 1.0
         self.session_memories: Dict[str, List[Dict[str, str]]] = {}
         self.session_students: Dict[str, str] = {}  # session_id -> cedula
         self._query_cache: Dict[str, Dict[str, Any]] = {}
@@ -53,7 +88,7 @@ class RAGEngine:
         self._max_cache_entries = 250
 
     def _make_cache_key(self, query: str, student: Optional[Dict[str, Any]]) -> str:
-        clean = re.sub(r'[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ]', '', query.lower().strip())
+        clean = re.sub(r"[^a-z0-9]", "", normalize_text(query.strip()))
         ced = student.get("cedula", "anon") if student else "anon"
         return f"{clean}::{ced}"
 
@@ -96,119 +131,160 @@ class RAGEngine:
     def reload_documents(self) -> int:
         """Limpia la memoria caché y recarga todos los documentos PDF activos."""
         self._cached_chunks = None
+        self._bm25_df = {}
+        self._bm25_avgdl = 1.0
         self._query_cache.clear()
         chunks = self._get_memory_chunks()
         return len(chunks)
 
-    def _get_memory_chunks(self):
+    def _get_memory_chunks(self) -> List[Dict[str, Any]]:
+        """Carga los PDFs en memoria y construye el índice Okapi BM25 (< 30MB RAM)."""
         if self._cached_chunks is None:
             self._cached_chunks = []
+            df: Dict[str, int] = {}
+            total_len = 0
+
             try:
                 from src.config import DOCUMENTS_DIR
                 from src.ingestion import extract_text_from_pdf, split_text_into_chunks
             except ImportError:
                 from config import DOCUMENTS_DIR
                 from ingestion import extract_text_from_pdf, split_text_into_chunks
+
             for pdf in DOCUMENTS_DIR.glob("*.pdf"):
                 pages = extract_text_from_pdf(pdf)
                 for p in pages:
                     for c in split_text_into_chunks(p["text"], 120, 30):
+                        tokens = tokenize_bm25(c)
+                        tf = Counter(tokens)
+                        doc_len = len(tokens)
+                        total_len += doc_len
+                        for term in tf.keys():
+                            df[term] = df.get(term, 0) + 1
+
                         self._cached_chunks.append({
                             "content": c,
                             "source": pdf.name,
                             "page": p["page"],
-                            "lower": c.lower()
+                            "tf": tf,
+                            "len": doc_len,
                         })
+
+            self._bm25_df = df
+            n_docs = len(self._cached_chunks)
+            self._bm25_avgdl = (total_len / n_docs) if n_docs > 0 else 1.0
+
         return self._cached_chunks
 
-    def retrieve(self, query: str, top_k: int = TOP_K_RESULTS, history: List[Dict[str, str]] = None) -> List[Dict[str, Any]]:
-        # Motor de Búsqueda Semántica Ultraliviano (< 30MB RAM)
+    def retrieve(
+        self,
+        query: str,
+        top_k: int = TOP_K_RESULTS,
+        history: Optional[List[Dict[str, str]]] = None,
+        min_score: float = 0.35
+    ) -> List[Dict[str, Any]]:
+        """Motor de recuperación Okapi BM25 en Python puro con normalización de tildes y stopwords."""
         chunks = self._get_memory_chunks()
-        
-        # Palabras clave de la consulta actual
-        query_words = [w.lower() for w in query.split() if len(w) > 2]
-        
-        # Si hay historial previo, incorporar términos clave del turno anterior para preguntas de seguimiento
+        if not chunks:
+            return []
+
+        query_tokens = tokenize_bm25(query)
+
+        # Incorporar términos clave del historial reciente con menor peso para preguntas de seguimiento
+        history_tokens: List[str] = []
         if history:
             for item in history[-2:]:
-                query_words.extend([w.lower() for w in item.get("content", "").split() if len(w) > 4])
-        
-        scored = []
+                history_tokens.extend([t for t in tokenize_bm25(item.get("content", "")) if len(t) > 4])
+
+        if not query_tokens and not history_tokens:
+            return []
+
+        n_docs = len(chunks)
+        avgdl = self._bm25_avgdl or 1.0
+        k1 = 1.5
+        b = 0.75
+
+        def _bm25_score(doc: Dict[str, Any], tokens: List[str], weight: float = 1.0) -> float:
+            score = 0.0
+            tf_map = doc["tf"]
+            dl = doc["len"] or 1
+            for term in tokens:
+                freq = tf_map.get(term, 0)
+                if freq == 0:
+                    continue
+                df = self._bm25_df.get(term, 0)
+                idf = math.log((n_docs - df + 0.5) / (df + 0.5) + 1.0)
+                denom = freq + k1 * (1.0 - b + b * (dl / avgdl))
+                score += weight * idf * ((freq * (k1 + 1.0)) / denom)
+            return score
+
+        scored: List[Tuple[float, Dict[str, Any]]] = []
         for c in chunks:
-            score = sum(2 for w in query_words if w in c["lower"])
-            if score > 0:
-                scored.append((score, c))
+            s = _bm25_score(c, query_tokens, weight=1.0)
+            if history_tokens:
+                s += _bm25_score(c, history_tokens[:8], weight=0.35)
+            if s >= min_score:
+                scored.append((s, c))
+
         scored.sort(key=lambda x: x[0], reverse=True)
-        top = [s[1] for s in scored[:top_k]]
-        if not top and chunks:
-            top = chunks[:top_k]
+        top = scored[:top_k]
+
         return [
             {
                 "content": c["content"],
                 "source": c["source"],
                 "page": c["page"],
+                "score": round(score, 4),
                 "distance": 0
             }
-            for c in top
+            for score, c in top
         ]
 
-    def generate_response(self, query: str, session_id: str = None, student_cedula: str = None) -> Dict[str, Any]:
-        # Detección / Vinculación de Estudiante TernaNet
-        active_student = None
+    # --- Helpers compartidos entre modo síncrono y streaming SSE ---
+
+    def _resolve_student(
+        self, query: str, session_id: Optional[str], student_cedula: Optional[str]
+    ) -> Optional[Dict[str, Any]]:
         if student_cedula:
-            self.set_session_student(session_id, student_cedula)
-        elif session_id:
-            # Chequear si en la pregunta se menciona una cédula (ej. 'mi cedula es 27346776')
+            if session_id:
+                self.set_session_student(session_id, student_cedula)
+            return get_student_by_cedula(student_cedula)
+
+        if session_id:
             detected = detect_cedula_in_text(query)
             if detected:
                 self.set_session_student(session_id, detected)
+            return self.get_session_student(session_id)
 
-        if session_id:
-            active_student = self.get_session_student(session_id)
-        elif student_cedula:
-            active_student = get_student_by_cedula(student_cedula)
+        return None
 
-        # Obtener historial de la sesión si existe
-        history = self.session_memories.get(session_id, []) if session_id else []
+    def _record_session_turn(self, session_id: Optional[str], query: str, answer: str):
+        if not session_id:
+            return
+        if session_id not in self.session_memories:
+            self.session_memories[session_id] = []
+        self.session_memories[session_id].append({"role": "user", "content": query})
+        self.session_memories[session_id].append({"role": "assistant", "content": answer})
+        self.session_memories[session_id] = self.session_memories[session_id][-6:]
 
-        # ⚡ Optimización 1: In-Memory Cache Lookup (Respuesta instantánea < 10ms para consultas repetidas)
-        cache_key = self._make_cache_key(query, active_student)
-        cached_result = self._get_from_cache(cache_key)
-        if cached_result and not history:
-            if session_id:
-                if session_id not in self.session_memories:
-                    self.session_memories[session_id] = []
-                self.session_memories[session_id].append({"role": "user", "content": query})
-                self.session_memories[session_id].append({"role": "assistant", "content": cached_result["answer"]})
-                self.session_memories[session_id] = self.session_memories[session_id][-6:]
-            return {
-                **cached_result,
-                "student": active_student,
-                "cached": True
-            }
+    def _build_prompts(
+        self,
+        query: str,
+        contexts: List[Dict[str, Any]],
+        history: List[Dict[str, str]],
+        active_student: Optional[Dict[str, Any]]
+    ) -> Tuple[str, str, List[str]]:
+        """Construye system_instruction, user_prompt y la lista de fuentes únicas."""
+        if contexts:
+            context_text = "\n\n".join([
+                f"[Fuente: {c['source']} - Pág. {c['page']}]\n{c['content']}"
+                for c in contexts
+            ])
+            unique_sources = list({f"{c['source']} (pág. {c['page']})" for c in contexts})
+        else:
+            context_text = "No se recuperaron reglamentos específicos para esta pregunta; responde utilizando el expediente del estudiante si aplica."
+            unique_sources = []
 
-        # 1. Retrieve relevant contexts (considerando contexto de historial)
-        contexts = self.retrieve(query, history=history)
-        
-        if not contexts:
-            msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
-            if active_student:
-                msg = f"Hola, {active_student.get('nombre')}. {msg}"
-            return {
-                "answer": msg,
-                "sources": [],
-                "student": active_student
-            }
-
-        # Build context string & list sources
-        context_text = "\n\n".join([
-            f"[Fuente: {c['source']} - Pág. {c['page']}]\n{c['content']}"
-            for c in contexts
-        ])
-        
-        unique_sources = list({f"{c['source']} (pág. {c['page']})" for c in contexts})
-
-        # Formatear historial reciente para el prompt
         history_text = ""
         if history:
             formatted_turns = []
@@ -248,8 +324,40 @@ class RAGEngine:
             )
 
         user_prompt = f"{history_text}{student_prompt_inject}CONTEXTO OFICIAL DEL IUTECP:\n{context_text}\n\nNUEVA PREGUNTA DEL ESTUDIANTE: {query}"
+        return system_instruction, user_prompt, unique_sources
 
-        # 2. Strategy A: Use Google Gemini if key available
+    def generate_response(self, query: str, session_id: str = None, student_cedula: str = None) -> Dict[str, Any]:
+        active_student = self._resolve_student(query, session_id, student_cedula)
+        history = self.session_memories.get(session_id, []) if session_id else []
+
+        # ⚡ Optimización 1: In-Memory Cache Lookup (< 10ms para consultas repetidas)
+        cache_key = self._make_cache_key(query, active_student)
+        cached_result = self._get_from_cache(cache_key)
+        if cached_result and not history:
+            self._record_session_turn(session_id, query, cached_result["answer"])
+            return {
+                **cached_result,
+                "student": active_student,
+                "cached": True
+            }
+
+        # 1. Recuperación BM25
+        contexts = self.retrieve(query, history=history)
+
+        # Solo retornar vacío si no hay contexto normativo NI perfil de estudiante activo
+        if not contexts and not active_student:
+            msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
+            return {
+                "answer": msg,
+                "sources": [],
+                "student": active_student
+            }
+
+        system_instruction, user_prompt, unique_sources = self._build_prompts(
+            query, contexts, history, active_student
+        )
+
+        # 2. Strategy A: Google Gemini
         current_api_key = os.getenv("GEMINI_API_KEY") or GEMINI_API_KEY
         if current_api_key:
             client = gemini_client
@@ -259,7 +367,7 @@ class RAGEngine:
                     client = genai.Client(api_key=current_api_key)
                 except Exception as e:
                     print(f"[!] Error creando genai.Client: {e}")
-            
+
             if client:
                 model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
                 models_to_try = [model_name, "gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite"]
@@ -272,15 +380,7 @@ class RAGEngine:
                         )
                         if response and response.text:
                             answer = response.text
-                            # Guardar en memoria de sesión
-                            if session_id:
-                                if session_id not in self.session_memories:
-                                    self.session_memories[session_id] = []
-                                self.session_memories[session_id].append({"role": "user", "content": query})
-                                self.session_memories[session_id].append({"role": "assistant", "content": answer})
-                                self.session_memories[session_id] = self.session_memories[session_id][-6:]
-                            
-                            # ⚡ Guardar en Caché Inteligente
+                            self._record_session_turn(session_id, query, answer)
                             self._save_to_cache(cache_key, {
                                 "answer": answer,
                                 "sources": unique_sources
@@ -293,7 +393,7 @@ class RAGEngine:
                     except Exception as e:
                         print(f"[!] Error con {candidate_model}: {e}. Probando siguiente modelo...")
 
-        # 3. Strategy B: Use OpenAI if key available
+        # 3. Strategy B: OpenAI
         if OPENAI_API_KEY and HAS_OPENAI:
             try:
                 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -306,6 +406,7 @@ class RAGEngine:
                     temperature=0.3
                 )
                 answer = completion.choices[0].message.content
+                self._record_session_turn(session_id, query, answer)
                 self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
                 return {
                     "answer": answer,
@@ -317,6 +418,7 @@ class RAGEngine:
 
         # 4. Strategy C: High-Fidelity Local Synthesis (Fallback sin API key)
         answer = self._synthesize_local(query, contexts, student=active_student)
+        self._record_session_turn(session_id, query, answer)
         self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
         return {
             "answer": answer,
@@ -327,19 +429,8 @@ class RAGEngine:
     async def generate_response_stream(
         self, query: str, session_id: str = None, student_cedula: str = None
     ) -> AsyncGenerator[str, None]:
-        """Transmite la respuesta token por token en tiempo real (Server-Sent Events)."""
-        active_student = None
-        if student_cedula:
-            self.set_session_student(session_id, student_cedula)
-        elif session_id:
-            detected = detect_cedula_in_text(query)
-            if detected:
-                self.set_session_student(session_id, detected)
-
-        if session_id:
-            active_student = self.get_session_student(session_id)
-        elif student_cedula:
-            active_student = get_student_by_cedula(student_cedula)
+        """Transmite la respuesta token por token de forma asíncrona no bloqueante (SSE)."""
+        active_student = self._resolve_student(query, session_id, student_cedula)
 
         # Enviar evento inicial de metadatos
         yield f"data: {json.dumps({'type': 'start', 'student': active_student})}\n\n"
@@ -353,17 +444,11 @@ class RAGEngine:
             full_text = cached_result["answer"]
             words = full_text.split(" ")
             for i in range(0, len(words), 5):
-                chunk = " ".join(words[i:i+5]) + " "
+                chunk = " ".join(words[i:i + 5]) + " "
                 yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
                 await asyncio.sleep(0.015)
 
-            if session_id:
-                if session_id not in self.session_memories:
-                    self.session_memories[session_id] = []
-                self.session_memories[session_id].append({"role": "user", "content": query})
-                self.session_memories[session_id].append({"role": "assistant", "content": full_text})
-                self.session_memories[session_id] = self.session_memories[session_id][-6:]
-
+            self._record_session_turn(session_id, query, full_text)
             query_id = analytics.record_query(
                 query=query,
                 channel="web",
@@ -374,11 +459,8 @@ class RAGEngine:
             return
 
         contexts = self.retrieve(query, history=history)
-        if not contexts:
+        if not contexts and not active_student:
             msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
-            if active_student:
-                msg = f"Hola, {active_student.get('nombre')}. {msg}"
-            
             query_id = analytics.record_query(
                 query=query,
                 channel="web",
@@ -389,48 +471,9 @@ class RAGEngine:
             yield f"data: {json.dumps({'type': 'done', 'sources': [], 'student': active_student, 'query_id': query_id})}\n\n"
             return
 
-        context_text = "\n\n".join([
-            f"[Fuente: {c['source']} - Pág. {c['page']}]\n{c['content']}"
-            for c in contexts
-        ])
-        unique_sources = list({f"{c['source']} (pág. {c['page']})" for c in contexts})
-
-        history_text = ""
-        if history:
-            formatted_turns = []
-            for h in history[-4:]:
-                role_label = "Estudiante" if h["role"] == "user" else "Asistente"
-                formatted_turns.append(f"{role_label}: {h['content']}")
-            history_text = "HISTORIAL RECIENTE DE LA CONVERSACIÓN:\n" + "\n".join(formatted_turns) + "\n\n"
-
-        system_instruction = (
-            "Eres el Asistente Virtual Oficial del Instituto Universitario de Tecnología 'Elías Calixto Pompa' (IUTECP). "
-            "Tu misión es orientar con amabilidad, claridad y precisión a la comunidad estudiantil. "
-            "REGLAS OBLIGATORIAS:\n"
-            "1. Responde de forma clara y estructurada (usa viñetas o listas numeradas cuando explique requisitos o pasos).\n"
-            "2. Basa tu respuesta ESTRICTAMENTE en la información institucional proporcionada en el CONTEXTO.\n"
-            "3. Recuerda y utiliza el HISTORIAL DE LA CONVERSACIÓN para responder preguntas de seguimiento.\n"
-            "4. Menciona las fuentes oficiales, artículos o sedes relevantes según el contexto.\n"
-            "5. Si el contexto no contiene la respuesta completa, indica cordialmente que el estudiante debe acudir a Control de Estudios o consultar en TernaNet.\n"
-            "6. Responde siempre en español formal pero cercano."
+        system_instruction, user_prompt, unique_sources = self._build_prompts(
+            query, contexts, history, active_student
         )
-
-        student_prompt_inject = ""
-        if active_student:
-            student_context = format_student_context_for_rag(active_student)
-            student_prompt_inject = f"{student_context}\n\n"
-            system_instruction += (
-                "\n\n=======================================================\n"
-                "ATENCIÓN - PERFIL DEL ESTUDIANTE IDENTIFICADO EN TERNANET:\n"
-                f"{student_context}\n"
-                "DIRECTRICES OBLIGATORIAS PARA ESTE ESTUDIANTE:\n"
-                f"1. Dirígete cordialmente al estudiante por su nombre ('{active_student.get('nombre')}').\n"
-                "2. Cruza los requisitos y normativas del IUTECP DIRECTAMENTE con los datos reales de su expediente.\n"
-                "3. Ofrece una orientación personalizada, motivadora y clara.\n"
-                "=======================================================\n"
-            )
-
-        user_prompt = f"{history_text}{student_prompt_inject}CONTEXTO OFICIAL DEL IUTECP:\n{context_text}\n\nNUEVA PREGUNTA DEL ESTUDIANTE: {query}"
         full_prompt = f"{system_instruction}\n\n{user_prompt}"
 
         current_api_key = os.getenv("GEMINI_API_KEY") or GEMINI_API_KEY
@@ -442,35 +485,34 @@ class RAGEngine:
             models_to_try = [model_name, "gemini-3.5-flash", "gemini-flash-lite-latest"]
             for candidate_model in models_to_try:
                 try:
-                    stream = gemini_client.models.generate_content_stream(
+                    # Streaming asíncrono nativo (no bloquea el event loop de FastAPI)
+                    stream = await gemini_client.aio.models.generate_content_stream(
                         model=candidate_model,
                         contents=full_prompt
                     )
-                    for chunk in stream:
+                    async for chunk in stream:
                         if chunk.text:
                             full_answer += chunk.text
                             yield f"data: {json.dumps({'type': 'token', 'content': chunk.text})}\n\n"
-                    stream_success = True
-                    break
+                    if full_answer:
+                        stream_success = True
+                        break
                 except Exception as e:
-                    print(f"[!] Error streaming con {candidate_model}: {e}")
+                    print(f"[!] Error streaming async con {candidate_model}: {e}")
 
         if not stream_success:
-            res = self.generate_response(query, session_id=session_id, student_cedula=student_cedula)
+            res = await asyncio.to_thread(
+                self.generate_response, query, session_id=session_id, student_cedula=student_cedula
+            )
             full_answer = res["answer"]
+            unique_sources = res.get("sources", unique_sources)
             words = full_answer.split(" ")
             for i in range(0, len(words), 5):
-                chunk = " ".join(words[i:i+5]) + " "
+                chunk = " ".join(words[i:i + 5]) + " "
                 yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
                 await asyncio.sleep(0.015)
 
-        if session_id:
-            if session_id not in self.session_memories:
-                self.session_memories[session_id] = []
-            self.session_memories[session_id].append({"role": "user", "content": query})
-            self.session_memories[session_id].append({"role": "assistant", "content": full_answer})
-            self.session_memories[session_id] = self.session_memories[session_id][-6:]
-
+        self._record_session_turn(session_id, query, full_answer)
         self._save_to_cache(cache_key, {
             "answer": full_answer,
             "sources": unique_sources
@@ -486,89 +528,70 @@ class RAGEngine:
         yield f"data: {json.dumps({'type': 'done', 'sources': unique_sources, 'student': active_student, 'query_id': query_id})}\n\n"
 
     def _synthesize_local(self, query: str, contexts: List[Dict[str, Any]], student: Optional[Dict[str, Any]] = None) -> str:
-        """Sintesis local inteligente cuando no se ha configurado una API Key de LLM."""
-        import re
-        
-        # Stopwords en espanol para extraer palabras clave de la pregunta
-        stopwords = {
-            "cuales", "cuanto", "cuantos", "cuantas", "donde", "como", "cual", "que", "quien",
-            "para", "por", "con", "sin", "sobre", "del", "las", "los", "una", "uno", "unos", "unas",
-            "este", "esta", "estos", "estas", "son", "estoy", "esta", "estan", "puede", "puedo",
-            "tengo", "tener", "ser", "sede", "sedes", "iutecp", "ubicacion", "ubicaciones"
-        }
-        
-        # Palabras clave de la consulta
-        query_words = [w.lower() for w in re.findall(r'\b[a-zA-ZáéíóúÁÉÍÓÚñÑ]{3,}\b', query)]
-        key_terms = [w for w in query_words if w not in {"del", "las", "los", "que", "para", "por", "con"}]
-        
+        """Síntesis local inteligente cuando no se ha configurado una API Key de LLM."""
+        if not contexts:
+            if student:
+                return (
+                    f"¡Hola, **{student.get('nombre')}**! 🎓\n\n"
+                    f"• **Carrera:** {student.get('carrera')} (Sede {student.get('sede')})\n"
+                    f"• **Semestre actual:** {student.get('semestre')} ({student.get('porcentaje_carrera')}% de créditos aprobados)\n"
+                    f"• **Promedio acumulado:** {student.get('promedio')} / 20\n"
+                    f"• **Estatus arancelario:** {student.get('estatus_arancelario')}"
+                )
+            return "No encontré información relevante en los reglamentos oficiales del IUTECP para tu consulta."
+
+        key_terms = tokenize_bm25(query)
         best_doc = contexts[0]
         intro = f"De acuerdo con la documentación oficial del **IUTECP** (en *{best_doc['source']}*):\n\n"
         if student:
             intro = f"¡Hola, **{student.get('nombre')}**! 🎓 Revisando tu expediente en **TernaNet** ({student.get('carrera')}, {student.get('semestre')}do/to semestre) y la documentación oficial del **IUTECP**:\n\n"
-        
-        # Recolectar oraciones de todos los contextos
+
         all_sentences = []
         seen_texts = set()
-        
+
         for c in contexts:
-            # Limpiar encabezados institucionales y pies de pagina repetitivos
             cleaned = re.sub(r'IUTECP Oficial\s*-\s*C[oó]digo:[^\|]+\|\s*P[aá]gina\s*\d+/\d+', '', c["content"])
             cleaned = re.sub(r'INSTITUTO UNIVERSITARIO DE TECNOLOG[IÍ]A[^A-Z]+', '', cleaned)
             cleaned = re.sub(r'Direcci[oó]n Acad[eé]mica[^A-Z]+', '', cleaned)
-            
-            # Dividir en fragmentos por punto o por marcadores (numeros o bullet points)
+
             parts = re.split(r'(?:\. |\n+|(?=[1-9]\.\s)|(?=[•\-])|(?=Art[íi]culo\s+\d+))', cleaned)
             for part in parts:
                 p = part.strip()
-                # Filtrar fragmentos muy cortos o no informativos
                 if len(p) > 20 and not p.startswith("Página") and p.lower() not in seen_texts:
                     seen_texts.add(p.lower())
-                    
-                    # Calcular relevancia según palabras clave
-                    score = 0
-                    p_lower = p.lower()
-                    for term in key_terms:
-                        if term in p_lower:
-                            score += 2
-                    for qw in query_words:
-                        if qw in p_lower:
-                            score += 1
-                    
+                    p_norm = normalize_text(p)
+                    score = sum(2 for term in key_terms if term in p_norm)
                     all_sentences.append((score, p))
-                    
-        # Ordenar por relevancia
+
         all_sentences.sort(key=lambda x: x[0], reverse=True)
-        
-        # Tomar las oraciones más relevantes (score > 0 si existen)
+
         relevant_sentences = [s[1] for s in all_sentences if s[0] > 0][:5]
         if not relevant_sentences:
             relevant_sentences = [s[1] for s in all_sentences[:4]]
-            
+
         points = []
         for s in relevant_sentences:
-            # Formatear limpio como viñeta
             s_clean = s.lstrip("•- \t").rstrip(".,;")
             if s_clean:
                 points.append(f"• **{s_clean}**." if len(s_clean) < 60 else f"• {s_clean}.")
-                
+
         summary = "\n\n".join(points)
-        
+
         outro = (
             "\n\n---\n"
             "> 💡 **Tip:** Para respuestas redactadas con lenguaje natural avanzado, agrega una clave gratuita de "
             "**Google Gemini** en el archivo `.env` (`GEMINI_API_KEY=`)."
         )
-        
+
         return intro + summary + outro
 
     def transcribe_audio(self, audio_bytes: bytes, mime_type: str = "audio/ogg") -> str:
         """Transcribe notas de voz estudiantiles usando Gemini Multimodal."""
         if not gemini_client:
             raise RuntimeError("Gemini Client no está configurado.")
-        
+
         from google.genai import types
-        
-        # Estandarizar mime_type para Gemini
+
         m = (mime_type or "audio/ogg").lower()
         if "mp3" in m or "mpeg" in m:
             clean_mime = "audio/mp3"
@@ -598,10 +621,7 @@ class RAGEngine:
             "2. Responde ÚNICAMENTE con la transcripción exacta. No agregues saludos, explicaciones, comillas ni texto introductorio."
         )
         try:
-            from google.genai import types as genai_types
-            config = genai_types.GenerateContentConfig(
-                temperature=0.0
-            )
+            config = types.GenerateContentConfig(temperature=0.0)
             response = gemini_client.models.generate_content(
                 model=GEMINI_MODEL,
                 contents=[part, prompt],

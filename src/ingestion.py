@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 from pypdf import PdfReader
-import chromadb
-from chromadb.utils import embedding_functions
 
 try:
     from src.config import DOCUMENTS_DIR, CHROMA_DB_DIR, CHUNK_SIZE, CHUNK_OVERLAP
@@ -36,6 +34,10 @@ def split_text_into_chunks(text: str, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERL
 
 
 def build_vector_store():
+    """Indexa los PDFs en ChromaDB (opcional/legado; el motor principal usa BM25 en RAM)."""
+    import chromadb
+    from chromadb.utils import embedding_functions
+
     print(f"[*] Iniciando indexación de documentos en: {DOCUMENTS_DIR}")
     
     # Initialize ChromaDB persistent client

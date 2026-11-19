@@ -81,6 +81,9 @@ def main():
 
             for update in data.get("result", []):
                 offset = update["update_id"] + 1
+                msg = update.get("message") or update.get("edited_message")
+                if not msg:
+                    continue
                 chat_id = msg["chat"]["id"]
                 user_name = msg.get("from", {}).get("first_name", "Estudiante")
                 session_id = f"tg_{chat_id}"
