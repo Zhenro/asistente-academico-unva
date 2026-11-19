@@ -492,7 +492,7 @@ class RAGEngine:
 
             if client:
                 model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
-                models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-2.5-flash"]))
+                models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-flash-latest"]))
                 full_prompt = f"{system_instruction}\n\n{user_prompt}"
                 for candidate_model in models_to_try:
                     try:
@@ -540,15 +540,17 @@ class RAGEngine:
             except Exception as e:
                 print(f"[!] Error al invocar OpenAI API: {e}")
 
-        # 4. Strategy C: High-Fidelity Local Synthesis (Fallback sin API key)
+        # 4. Strategy C: High-Fidelity Local Synthesis (Fallback sin API key o ante fallo temporal de red)
         answer = self._synthesize_local(query, contexts, student=active_student)
         self._record_session_turn(session_id, query, answer)
-        if not history:
+        # Solo cachear síntesis local si NO hay API key configurada (evita cachear fallos temporales de Gemini)
+        if not history and not current_api_key:
             self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
         return {
             "answer": answer,
             "sources": unique_sources,
-            "student": active_student
+            "student": active_student,
+            "is_fallback": True
         }
 
     async def generate_response_stream(
@@ -623,7 +625,7 @@ class RAGEngine:
 
         if current_api_key and gemini_client:
             model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
-            models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-2.5-flash"]))
+            models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-flash-latest"]))
             for candidate_model in models_to_try:
                 try:
                     # Streaming asíncrono nativo (no bloquea el event loop de FastAPI)
@@ -645,12 +647,14 @@ class RAGEngine:
                         stream_success = True
                         break
 
+        is_local_fallback = False
         if not stream_success and not full_answer:
             res = await asyncio.to_thread(
                 self.generate_response, query, session_id=session_id, student_cedula=student_cedula
             )
             full_answer = res["answer"]
             unique_sources = res.get("sources", unique_sources)
+            is_local_fallback = bool(res.get("is_fallback", False))
             words = full_answer.split(" ")
             for i in range(0, len(words), 5):
                 chunk = " ".join(words[i:i + 5]) + " "
@@ -658,7 +662,7 @@ class RAGEngine:
                 await asyncio.sleep(0.015)
 
         self._record_session_turn(session_id, query, full_answer)
-        if not history:
+        if not history and not (is_local_fallback and current_api_key):
             self._save_to_cache(cache_key, {
                 "answer": full_answer,
                 "sources": unique_sources
@@ -723,14 +727,7 @@ class RAGEngine:
                 points.append(f"• **{s_clean}**." if len(s_clean) < 60 else f"• {s_clean}.")
 
         summary = "\n\n".join(points)
-
-        outro = (
-            "\n\n---\n"
-            "> 💡 **Tip:** Para respuestas redactadas con lenguaje natural avanzado, agrega una clave gratuita de "
-            "**Google Gemini** en el archivo `.env` (`GEMINI_API_KEY=`)."
-        )
-
-        return intro + summary + outro
+        return intro + summary
 
     def transcribe_audio(self, audio_bytes: bytes, mime_type: str = "audio/ogg") -> str:
         """Transcribe notas de voz estudiantiles usando Gemini Multimodal."""
