@@ -68,12 +68,29 @@ def normalize_text(text: str) -> str:
     return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
 
 
+def _stem_spanish_plural(word: str) -> str:
+    """Normalización ligera de plurales en español sin dependencias externas."""
+    if len(word) <= 4:
+        return word
+    if word.endswith("iones") and len(word) > 6:
+        return word[:-2]
+    if word.endswith(("ades", "ales", "ares", "ores", "enes", "eles")) and len(word) > 5:
+        return word[:-2]
+    if word.endswith("s") and not word.endswith(("is", "ss")):
+        return word[:-1]
+    return word
+
+
 def tokenize_bm25(text: str) -> List[str]:
-    """Tokeniza texto normalizado eliminando puntuación, tokens muy cortos y stopwords."""
+    """Tokeniza texto normalizado eliminando puntuación, stopwords y normalizando plurales."""
     norm = normalize_text(text)
     tokens = re.findall(r"[a-z0-9]+", norm)
     # Conservar siglas académicas clave de 2 letras como 'pi' (Pérdida por Inasistencia)
-    return [t for t in tokens if (len(t) > 2 or t in {"pi"}) and t not in SPANISH_STOPWORDS]
+    result = []
+    for t in tokens:
+        if (len(t) > 2 or t in {"pi"}) and t not in SPANISH_STOPWORDS:
+            result.append(_stem_spanish_plural(t))
+    return result
 
 
 class RAGEngine:
@@ -83,6 +100,7 @@ class RAGEngine:
         self._bm25_avgdl: float = 1.0
         self.session_memories: Dict[str, List[Dict[str, str]]] = {}
         self.session_students: Dict[str, str] = {}  # session_id -> cedula
+        self._max_sessions = 500
         self._query_cache: Dict[str, Dict[str, Any]] = {}
         self._cache_ttl_seconds = 3600  # 1 hora de validez
         self._max_cache_entries = 250
@@ -111,8 +129,11 @@ class RAGEngine:
         }
 
     def set_session_student(self, session_id: str, cedula: str):
-        """Asocia una cédula de estudiante de TernaNet a una sesión."""
+        """Asocia una cédula de estudiante de TernaNet a una sesión (con límite LRU para evitar memory leaks)."""
         if session_id and cedula:
+            if session_id not in self.session_students and len(self.session_students) >= self._max_sessions:
+                oldest = next(iter(self.session_students))
+                del self.session_students[oldest]
             clean = normalize_cedula(cedula)
             self.session_students[session_id] = clean
 
@@ -262,6 +283,9 @@ class RAGEngine:
         if not session_id:
             return
         if session_id not in self.session_memories:
+            if len(self.session_memories) >= self._max_sessions:
+                oldest = next(iter(self.session_memories))
+                del self.session_memories[oldest]
             self.session_memories[session_id] = []
         self.session_memories[session_id].append({"role": "user", "content": query})
         self.session_memories[session_id].append({"role": "assistant", "content": answer})

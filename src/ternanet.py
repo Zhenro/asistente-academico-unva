@@ -13,6 +13,8 @@ except ImportError:
     from config import DATA_DIR
 
 STUDENTS_FILE = DATA_DIR / "students.json"
+_STUDENTS_CACHE: Optional[List[Dict[str, Any]]] = None
+_STUDENTS_MTIME: float = -1.0
 
 
 def normalize_cedula(cedula_raw: str) -> str:
@@ -22,16 +24,33 @@ def normalize_cedula(cedula_raw: str) -> str:
     return re.sub(r"[^0-9]", "", str(cedula_raw))
 
 
+def format_semestre_ordinal(semestre: Any) -> str:
+    """Formatea el número de semestre en ordinal español correcto (1er, 2do, 3er, 4to...)."""
+    ordinals = {1: "1er", 2: "2do", 3: "3er", 4: "4to", 5: "5to", 6: "6to", 7: "7mo", 8: "8vo", 9: "9no", 10: "10mo"}
+    try:
+        n = int(semestre)
+        return ordinals.get(n, f"{n}to")
+    except (TypeError, ValueError):
+        return str(semestre)
+
+
 def load_students() -> List[Dict[str, Any]]:
-    """Carga los expedientes de estudiantes desde students.json."""
+    """Carga los expedientes de estudiantes desde students.json con caché en memoria por mtime."""
+    global _STUDENTS_CACHE, _STUDENTS_MTIME
     if not STUDENTS_FILE.exists():
         return []
     try:
+        mtime = STUDENTS_FILE.stat().st_mtime
+        if _STUDENTS_CACHE is not None and mtime == _STUDENTS_MTIME:
+            return _STUDENTS_CACHE
         with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        _STUDENTS_CACHE = data
+        _STUDENTS_MTIME = mtime
+        return data
     except Exception as e:
         print(f"[!] Error leyendo students.json: {e}")
-        return []
+        return _STUDENTS_CACHE or []
 
 
 def get_student_by_cedula(cedula: str) -> Optional[Dict[str, Any]]:
@@ -125,7 +144,7 @@ def format_student_context_for_rag(student: Dict[str, Any]) -> str:
         f"• Nombre del Estudiante: {student.get('nombre')}\n"
         f"• Cédula: {student.get('cedula_formato')} ({student.get('cedula')})\n"
         f"• Carrera: {student.get('carrera')} (Sede: {student.get('sede')})\n"
-        f"• Semestre en curso: {student.get('semestre')}do/to Semestre (Turno: {student.get('turno')})\n"
+        f"• Semestre en curso: {format_semestre_ordinal(student.get('semestre'))} Semestre (Turno: {student.get('turno')})\n"
         f"• Créditos aprobados: {student.get('creditos_aprobados')} de {student.get('creditos_totales')} ({student.get('porcentaje_carrera')}%)\n"
         f"• Promedio ponderado acumulado: {student.get('promedio')} / 20\n"
         f"• Materias que cursa actualmente: {materias_str}\n"

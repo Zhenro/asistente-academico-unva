@@ -1,9 +1,12 @@
 import os
 import json
+import time
 import urllib.request
 import re
 import socket
-from datetime import datetime
+from collections import defaultdict
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Forzar resolución IPv4 para peticiones salientes (evita que Linux/Render cuelgue en IPv6 sin ruta)
@@ -15,7 +18,7 @@ def _getaddrinfo_ipv4(host, port, family=0, type=0, proto=0, flags=0):
 socket.getaddrinfo = _getaddrinfo_ipv4
 import httpx
 import asyncio
-from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Header
+from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel
@@ -32,32 +35,46 @@ except ImportError:
     import analytics
     import ternanet
 
-app = FastAPI(
-    title="IUTECP - Asistente Virtual Académico",
-    description="API RAG para resolución de consultas estudiantiles e institucionales del IUTECP",
-    version="2.0.0"
-)
-
-# CORS Middleware (sin allow_credentials con wildcard para evitar exposición insegura)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Pool de conexiones HTTP persistentes con Keep-Alive para máxima velocidad
 httpx_client: Optional[httpx.AsyncClient] = None
 
+# Rate limiter ligero en memoria por IP (evita abuso y agotamiento de cuota Gemini)
+RATE_LIMIT_MAX_REQUESTS = int(os.getenv("RATE_LIMIT_MAX_REQUESTS", "25"))
+RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+MAX_PDF_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB máximo para proteger RAM en Render Free
+_RATE_LIMIT_BUCKETS: Dict[str, List[float]] = defaultdict(list)
 
-@app.on_event("startup")
-async def startup_event():
+
+def _check_rate_limit(request: Request):
+    """Aplica límite de solicitudes por minuto por dirección IP."""
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+    now = time.monotonic()
+    cutoff = now - RATE_LIMIT_WINDOW_SECONDS
+    bucket = [t for t in _RATE_LIMIT_BUCKETS[client_ip] if t > cutoff]
+    if len(bucket) >= RATE_LIMIT_MAX_REQUESTS:
+        _RATE_LIMIT_BUCKETS[client_ip] = bucket
+        raise HTTPException(
+            status_code=429,
+            detail="Has excedido el límite temporal de consultas. Por favor espera unos segundos."
+        )
+    bucket.append(now)
+    _RATE_LIMIT_BUCKETS[client_ip] = bucket
+    # Evitar crecimiento infinito de IPs
+    if len(_RATE_LIMIT_BUCKETS) > 1000:
+        oldest_ip = next(iter(_RATE_LIMIT_BUCKETS))
+        del _RATE_LIMIT_BUCKETS[oldest_ip]
+
+
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
     global httpx_client
     httpx_client = httpx.AsyncClient(
         timeout=httpx.Timeout(25.0, connect=10.0),
         limits=httpx.Limits(max_keepalive_connections=20, max_connections=40),
-        headers={"User-Agent": "IUTECP-Assistant/2.0 (FastAPI; Render Cloud)"}
+        headers={"User-Agent": "IUTECP-Assistant/2.1 (FastAPI; Render Cloud)"}
     )
 
     print("[*] Precargando fragmentos de documentos en memoria...")
@@ -66,22 +83,29 @@ async def startup_event():
 
     # Auto-registrar Webhook de Telegram si hay token
     tg_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    tg_secret = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
     ext_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("SERVER_PUBLIC_URL")
     if not ext_url and os.getenv("RENDER_EXTERNAL_HOSTNAME"):
         ext_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}"
     if not ext_url and tg_token:
         ext_url = "https://asistente-academico-iutecp.onrender.com"
 
+    bg_tasks: List[asyncio.Task] = []
+
     if tg_token and ext_url:
         webhook_target = f"{ext_url.rstrip('/')}/api/telegram-webhook"
         print(f"[*] Registrando webhook de Telegram: {webhook_target}")
+
         async def _register_webhook_bg():
             try:
-                res_data = await telegram_api_call(tg_token, f"setWebhook?url={webhook_target}", None, 20)
+                payload = {"url": webhook_target}
+                if tg_secret:
+                    payload["secret_token"] = tg_secret
+                res_data = await telegram_api_call(tg_token, "setWebhook", payload, 20)
                 print(f"[OK] Webhook de Telegram registrado: {res_data}")
             except Exception as e:
                 print(f"[!] Error registrando webhook de Telegram: {e}")
-        asyncio.create_task(_register_webhook_bg())
+        bg_tasks.append(asyncio.create_task(_register_webhook_bg()))
 
     # ⏰ Optimización Keep-Warm: evitar que Render Free hiberne cada 15 minutos
     if ext_url:
@@ -93,17 +117,37 @@ async def startup_event():
                         ping_url = f"{ext_url.rstrip('/')}/api/health"
                         res = await httpx_client.get(ping_url)
                         if res.status_code == 200:
-                            print(f"[Keep-Warm] Ping activo exitoso: 200 OK")
+                            print("[Keep-Warm] Ping activo exitoso: 200 OK")
+                except asyncio.CancelledError:
+                    break
                 except Exception as e:
                     print(f"[Keep-Warm] Notice: {e}")
-        asyncio.create_task(_keep_warm_loop())
+        bg_tasks.append(asyncio.create_task(_keep_warm_loop()))
+
+    try:
+        yield
+    finally:
+        for t in bg_tasks:
+            t.cancel()
+        if httpx_client and not httpx_client.is_closed:
+            await httpx_client.aclose()
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    global httpx_client
-    if httpx_client and not httpx_client.is_closed:
-        await httpx_client.aclose()
+app = FastAPI(
+    title="IUTECP - Asistente Virtual Académico",
+    description="API RAG para resolución de consultas estudiantiles e institucionales del IUTECP",
+    version="2.1.0",
+    lifespan=lifespan
+)
+
+# CORS Middleware (sin allow_credentials con wildcard para evitar exposición insegura)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/api/health")
@@ -111,7 +155,7 @@ async def health_endpoint():
     """Endpoint ultra-rápido para monitoreo de estado y Keep-Warm ping."""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "memory_chunks": len(rag_engine._get_memory_chunks())
     }
 
@@ -201,13 +245,15 @@ async def serve_index():
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest):
+async def chat_endpoint(request: ChatRequest, http_request: Request):
+    _check_rate_limit(http_request)
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío")
     
     try:
-        result = rag_engine.generate_response(
-            request.message, 
+        result = await asyncio.to_thread(
+            rag_engine.generate_response,
+            request.message,
             session_id=request.session_id,
             student_cedula=request.student_cedula
         )
@@ -229,8 +275,9 @@ async def chat_endpoint(request: ChatRequest):
 
 
 @app.post("/api/chat/stream")
-async def chat_stream_endpoint(request: ChatRequest):
+async def chat_stream_endpoint(request: ChatRequest, http_request: Request):
     """🌊 Optimización Streaming: Transmite tokens en tiempo real a la interfaz web (Server-Sent Events)."""
+    _check_rate_limit(http_request)
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío")
     
@@ -306,7 +353,7 @@ async def handle_telegram_message_async(token: str, message: dict):
             audio_bytes = await download_telegram_file(token, file_id)
             
             await send_telegram_chat_action(token, chat_id, "typing")
-            transcription = rag_engine.transcribe_audio(audio_bytes, mime_type=mime_type)
+            transcription = await asyncio.to_thread(rag_engine.transcribe_audio, audio_bytes, mime_type=mime_type)
             if transcription:
                 text = transcription
                 is_voice = True
@@ -399,9 +446,9 @@ async def handle_telegram_message_async(token: str, message: dict):
         await send_telegram_message(token, chat_id, "🔄 *Historial de conversación reiniciado.* ¿En qué otra consulta puedo orientarte?")
         return
 
-    # GENERAR RESPUESTA RAG
+    # GENERAR RESPUESTA RAG (en thread pool para no bloquear el event loop)
     await send_telegram_chat_action(token, chat_id, "typing")
-    result = rag_engine.generate_response(text, session_id=session_id)
+    result = await asyncio.to_thread(rag_engine.generate_response, text, session_id=session_id)
     
     analytics.record_query(
         query=text,
@@ -421,11 +468,19 @@ async def handle_telegram_message_async(token: str, message: dict):
 
 
 @app.post("/api/telegram-webhook")
-async def telegram_webhook(update: dict, background_tasks: BackgroundTasks):
+async def telegram_webhook(
+    update: dict,
+    background_tasks: BackgroundTasks,
+    x_telegram_bot_api_secret_token: Optional[str] = Header(None)
+):
     token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
     if not token:
         return {"status": "ignored", "reason": "TELEGRAM_BOT_TOKEN no configurada"}
-    
+
+    expected_secret = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
+    if expected_secret and x_telegram_bot_api_secret_token != expected_secret:
+        raise HTTPException(status_code=403, detail="Secret token de Telegram inválido.")
+
     message = update.get("message") or update.get("edited_message")
     if not message:
         return {"status": "ignored"}
@@ -541,6 +596,10 @@ async def admin_upload_document(file: UploadFile = File(...), x_admin_key: Optio
     content = await file.read()
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="El archivo PDF subido está vacío.")
+    if len(content) > MAX_PDF_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="El archivo PDF excede el límite máximo permitido de 10 MB.")
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="El archivo subido no tiene una firma PDF válida (%PDF-).")
 
     with open(target_path, "wb") as f:
         f.write(content)

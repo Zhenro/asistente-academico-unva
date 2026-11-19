@@ -1334,10 +1334,30 @@
       }
     }
 
+    let isSending = false;
+
+    function renderSafeMarkdown(mdText) {
+      const rawHtml = marked.parse(mdText || '');
+      const template = document.createElement('template');
+      template.innerHTML = rawHtml;
+      template.content.querySelectorAll('script, iframe, object, embed, form, style').forEach(el => el.remove());
+      template.content.querySelectorAll('*').forEach(el => {
+        [...el.attributes].forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const val = (attr.value || '').trim().toLowerCase();
+          if (name.startsWith('on') || val.startsWith('javascript:') || val.startsWith('data:text/html')) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+      return template.innerHTML;
+    }
+
     async function dispatchMessage() {
       const text = chatQuery.value.trim();
-      if (!text) return;
+      if (!text || isSending) return;
 
+      isSending = true;
       appendBubble('user', text);
       chatQuery.value = '';
       sendBtn.disabled = true;
@@ -1408,6 +1428,9 @@
 
           streamBubble.finalize(accumulatedText, finalSources, isCached, finalQueryId);
 
+        } else if (response.status === 429) {
+          loadingRow.remove();
+          appendBubble('bot', '⏳ Has realizado muchas consultas seguidas. Por favor espera unos segundos antes de volver a preguntar.');
         } else {
           // Fallback seguro a endpoint síncrono estándar
           const fallbackRes = await fetch('/api/chat', {
@@ -1436,6 +1459,7 @@
         loadingRow.remove();
         appendBubble('bot', '⚠️ No se pudo conectar con el servidor. Revisa tu conexión a internet.');
       } finally {
+        isSending = false;
         sendBtn.disabled = false;
         chatQuery.focus();
       }
@@ -1460,11 +1484,11 @@
 
       return {
         updateText: (text) => {
-          contentBox.innerHTML = marked.parse(text);
+          contentBox.innerHTML = renderSafeMarkdown(text);
           chatScroll.scrollTop = chatScroll.scrollHeight;
         },
         finalize: (finalText, sources = [], isCached = false, queryId = null) => {
-          contentBox.innerHTML = marked.parse(finalText);
+          contentBox.innerHTML = renderSafeMarkdown(finalText);
 
           if (isCached) {
             const cacheBadge = document.createElement('div');
@@ -1551,7 +1575,7 @@
       contentBox.className = 'bubble-content';
 
       if (role === 'bot') {
-        contentBox.innerHTML = marked.parse(content);
+        contentBox.innerHTML = renderSafeMarkdown(content);
 
         // Sources
         if (sources && sources.length > 0) {

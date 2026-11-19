@@ -1012,6 +1012,15 @@
       }
     }
 
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderDocuments(data) {
       document.getElementById('statDocsCount').textContent = data.total_documents;
       document.getElementById('statChunksCount').textContent = data.total_chunks;
@@ -1031,23 +1040,24 @@
       }
 
       data.documents.forEach(doc => {
+        const safeName = escapeHtml(doc.name);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>
             <div class="pdf-name-cell">
               <span class="pdf-badge">PDF</span>
-              <span>${doc.name}</span>
+              <span>${safeName}</span>
             </div>
           </td>
-          <td>${doc.size_kb} KB</td>
-          <td>${doc.pages} pág(s)</td>
-          <td>${doc.modified_at}</td>
+          <td>${escapeHtml(doc.size_kb)} KB</td>
+          <td>${escapeHtml(doc.pages)} pág(s)</td>
+          <td>${escapeHtml(doc.modified_at)}</td>
           <td style="text-align: right;">
             <div class="table-actions" style="justify-content: flex-end;">
-              <button class="btn btn-secondary" onclick="downloadDocument('${doc.name}')" title="Descargar PDF">
+              <button class="btn btn-secondary" onclick="downloadDocument('${safeName}')" title="Descargar PDF">
                 <span>⬇️ Descargar</span>
               </button>
-              <button class="btn btn-danger" onclick="deleteDocument('${doc.name}')" title="Eliminar documento">
+              <button class="btn btn-danger" onclick="deleteDocument('${safeName}')" title="Eliminar documento">
                 <span>🗑️ Eliminar</span>
               </button>
             </div>
@@ -1110,10 +1120,12 @@
       } else {
         data.gaps.forEach(g => {
           const tr = document.createElement('tr');
+          const safeQuery = escapeHtml(g.query);
+          const safeChannel = escapeHtml((g.channel || 'web').toUpperCase());
           tr.innerHTML = `
-            <td style="font-weight:600; color:var(--danger);">${g.query}</td>
-            <td><span class="tag-badge ${g.channel === 'telegram' ? 'tag-green' : 'tag-blue'}">${g.channel.toUpperCase()}</span></td>
-            <td style="font-size:0.75rem; color:var(--text-muted);">${g.timestamp}</td>
+            <td style="font-weight:600; color:var(--danger);">${safeQuery}</td>
+            <td><span class="tag-badge ${g.channel === 'telegram' ? 'tag-green' : 'tag-blue'}">${safeChannel}</span></td>
+            <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(g.timestamp)}</td>
           `;
           gapsTbody.appendChild(tr);
         });
@@ -1135,11 +1147,15 @@
             ? '<span class="tag-badge tag-red">Vacío</span>' 
             : '<span class="tag-badge tag-green">Respondida</span>';
 
+          const safeQuery = escapeHtml(q.query);
+          const safeTopic = escapeHtml(q.topic);
+          const safeChannel = escapeHtml((q.channel || 'web').toUpperCase());
+
           tr.innerHTML = `
-            <td style="font-size:0.76rem; color:var(--text-muted);">${q.timestamp}</td>
-            <td><span class="tag-badge ${q.channel === 'telegram' ? 'tag-green' : 'tag-blue'}">${q.channel.toUpperCase()}</span></td>
-            <td><strong>${q.topic}</strong></td>
-            <td style="max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${q.query}">${q.query}</td>
+            <td style="font-size:0.76rem; color:var(--text-muted);">${escapeHtml(q.timestamp)}</td>
+            <td><span class="tag-badge ${q.channel === 'telegram' ? 'tag-green' : 'tag-blue'}">${safeChannel}</span></td>
+            <td><strong>${safeTopic}</strong></td>
+            <td style="max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${safeQuery}">${safeQuery}</td>
             <td>${gapBadge}</td>
             <td>${ratingBadge}</td>
           `;

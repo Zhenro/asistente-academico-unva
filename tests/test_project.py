@@ -12,8 +12,9 @@ from fastapi.testclient import TestClient
 
 import src.analytics as analytics
 import src.ternanet as ternanet
+import src.api as api_module
 from src.api import app, ADMIN_PASSWORD
-from src.rag_engine import rag_engine, normalize_text, tokenize_bm25
+from src.rag_engine import RAGEngine, rag_engine, normalize_text, tokenize_bm25
 
 
 class TestBM25AndRAG(unittest.TestCase):
@@ -27,6 +28,21 @@ class TestBM25AndRAG(unittest.TestCase):
         self.assertIn("evaluacion", tokens)
         self.assertNotIn("como", tokens)
         self.assertNotIn("el", tokens)
+
+    def test_spanish_plural_stemming(self):
+        self.assertEqual(tokenize_bm25("pasantías"), tokenize_bm25("pasantía"))
+        self.assertEqual(tokenize_bm25("créditos"), tokenize_bm25("crédito"))
+        self.assertEqual(tokenize_bm25("inscripciones"), tokenize_bm25("inscripción"))
+
+    def test_session_memory_is_bounded(self):
+        engine = RAGEngine()
+        engine._max_sessions = 3
+        for i in range(5):
+            engine.set_session_student(f"s_{i}", "30771246")
+            engine._record_session_turn(f"s_{i}", f"q{i}", f"a{i}")
+        self.assertEqual(len(engine.session_students), 3)
+        self.assertEqual(len(engine.session_memories), 3)
+        self.assertNotIn("s_0", engine.session_memories)
 
     def test_bm25_retrieves_accent_insensitive(self):
         results = rag_engine.retrieve("requisitos de inscripcion y cashea")
@@ -59,10 +75,13 @@ class TestTernaNetStudents(unittest.TestCase):
         self.assertIsNotNone(st)
         self.assertEqual(st["nombre"], "Paola Rada")
         self.assertEqual(ternanet.detect_cedula_in_text("mi cédula es 31418461"), "31418461")
+        ctx = ternanet.format_student_context_for_rag(st)
+        self.assertIn("3er Semestre", ctx)
 
 
 class TestAPIEndpoints(unittest.TestCase):
     def setUp(self):
+        api_module._RATE_LIMIT_BUCKETS.clear()
         self.client = TestClient(app)
         self._backup_analytics = analytics._load_data()
 
@@ -123,6 +142,25 @@ class TestAPIEndpoints(unittest.TestCase):
             })
             self.assertEqual(fb.status_code, 200)
             self.assertEqual(fb.json()["status"], "success")
+
+    def test_upload_rejects_invalid_pdf_signature(self):
+        res = self.client.post(
+            "/api/admin/upload",
+            headers={"x-admin-key": ADMIN_PASSWORD},
+            files={"file": ("falso.pdf", b"esto no es un pdf real", "application/pdf")}
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("%PDF-", res.json()["detail"])
+
+    def test_rate_limiting_triggers_429(self):
+        with patch.object(api_module, "RATE_LIMIT_MAX_REQUESTS", 2):
+            with patch("src.rag_engine.gemini_client", None):
+                r1 = self.client.post("/api/chat", json={"message": "sedes del iutecp"})
+                r2 = self.client.post("/api/chat", json={"message": "sedes del iutecp"})
+                r3 = self.client.post("/api/chat", json={"message": "sedes del iutecp"})
+                self.assertEqual(r1.status_code, 200)
+                self.assertEqual(r2.status_code, 200)
+                self.assertEqual(r3.status_code, 429)
 
 
 if __name__ == "__main__":
