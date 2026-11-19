@@ -1,4 +1,5 @@
 import os
+import hmac
 import json
 import time
 import urllib.request
@@ -226,14 +227,19 @@ async def download_telegram_file(token: str, file_id: str) -> bytes:
 
 
 async def send_telegram_message(token: str, chat_id: int, text: str):
-    """Envía un mensaje a Telegram con reintento automático si falla el formato Markdown."""
-    try:
-        await telegram_api_call(token, "sendMessage", {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}, timeout=15.0)
-    except Exception:
+    """Envía mensajes a Telegram dividiendo automáticamente textos > 3900 chars con fallback seguro."""
+    max_len = 3900
+    parts = [text[i:i + max_len] for i in range(0, len(text), max_len)] if text else [""]
+    for part in parts:
         try:
-            await telegram_api_call(token, "sendMessage", {"chat_id": chat_id, "text": text}, timeout=15.0)
-        except Exception as e:
-            print(f"[!] Error enviando mensaje a Telegram: {e}")
+            res = await telegram_api_call(token, "sendMessage", {"chat_id": chat_id, "text": part, "parse_mode": "Markdown"}, timeout=15.0)
+            if isinstance(res, dict) and not res.get("ok", True):
+                await telegram_api_call(token, "sendMessage", {"chat_id": chat_id, "text": part}, timeout=15.0)
+        except Exception:
+            try:
+                await telegram_api_call(token, "sendMessage", {"chat_id": chat_id, "text": part}, timeout=15.0)
+            except Exception as e:
+                print(f"[!] Error enviando mensaje a Telegram: {e}")
 
 
 @app.get("/")
@@ -469,7 +475,8 @@ async def handle_telegram_message_async(token: str, message: dict):
         reply_text += f"🎙️ *Escuché:* \"_{text}_\"\n\n"
     reply_text += result["answer"]
     if result.get("sources"):
-        reply_text += "\n\n📚 *Fuentes oficiales:* " + ", ".join(result["sources"])
+        safe_sources = [s.replace("_", "\\_") for s in result["sources"]]
+        reply_text += "\n\n📚 *Fuentes oficiales:* " + ", ".join(safe_sources)
 
     await send_telegram_message(token, chat_id, reply_text)
 
@@ -530,9 +537,31 @@ async def telegram_setup():
 
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "iutecp2026").strip()
+ADMIN_LOGIN_MAX_ATTEMPTS = int(os.getenv("ADMIN_LOGIN_MAX_ATTEMPTS", "10"))
+ADMIN_LOGIN_WINDOW_SECONDS = int(os.getenv("ADMIN_LOGIN_WINDOW_SECONDS", "300"))
+_ADMIN_LOGIN_BUCKETS: Dict[str, List[float]] = defaultdict(list)
+
+
+def _check_admin_login_rate_limit(request: Request):
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+    now = time.monotonic()
+    cutoff = now - ADMIN_LOGIN_WINDOW_SECONDS
+    bucket = [t for t in _ADMIN_LOGIN_BUCKETS[client_ip] if t > cutoff]
+    if len(bucket) >= ADMIN_LOGIN_MAX_ATTEMPTS:
+        _ADMIN_LOGIN_BUCKETS[client_ip] = bucket
+        raise HTTPException(
+            status_code=429,
+            detail="Demasiados intentos de inicio de sesión. Intenta nuevamente en unos minutos."
+        )
+    bucket.append(now)
+    _ADMIN_LOGIN_BUCKETS[client_ip] = bucket
+
 
 def verify_admin(x_admin_key: Optional[str]):
-    if not x_admin_key or x_admin_key.strip() != ADMIN_PASSWORD:
+    if not x_admin_key or not hmac.compare_digest(x_admin_key.strip(), ADMIN_PASSWORD):
         raise HTTPException(status_code=401, detail="Clave de administrador incorrecta o no suministrada.")
     return True
 
@@ -550,8 +579,9 @@ class AdminLoginRequest(BaseModel):
 
 
 @app.post("/api/admin/login")
-async def admin_login(req: AdminLoginRequest):
-    if req.password.strip() == ADMIN_PASSWORD:
+async def admin_login(req: AdminLoginRequest, http_request: Request):
+    _check_admin_login_rate_limit(http_request)
+    if hmac.compare_digest(req.password.strip(), ADMIN_PASSWORD):
         return {"status": "ok", "message": "Autenticación exitosa."}
     raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
 

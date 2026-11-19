@@ -68,6 +68,36 @@ def normalize_text(text: str) -> str:
     return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
 
 
+# Mapa de sinónimos estudiantiles venezolanos ↔ terminología oficial del IUTECP
+INSTITUTIONAL_SYNONYMS = {
+    "mensualidad": ["pago", "arancel", "cashea", "cuota"],
+    "matricula": ["pago", "arancel", "inscripcion", "cashea"],
+    "costo": ["pago", "arancel", "cashea"],
+    "precio": ["pago", "arancel", "cashea"],
+    "plata": ["pago", "arancel", "cashea"],
+    "raspar": ["inasistencia", "pi", "nota", "reprobar"],
+    "reprobar": ["inasistencia", "pi", "nota"],
+    "falta": ["inasistencia", "pi"],
+    "tesis": ["grado", "titulo", "pasantia"],
+    "graduacion": ["grado", "titulo", "solvencia"],
+    "horario": ["turno", "sabatino", "diurno", "nocturno"],
+    "calificacion": ["nota", "evaluacion", "escala"],
+    "boletin": ["nota", "promedio", "ternanet"],
+}
+
+
+def expand_query_synonyms(tokens: List[str]) -> List[str]:
+    """Expande tokens de consulta con sinónimos institucionales del IUTECP."""
+    expanded = list(tokens)
+    seen = set(tokens)
+    for t in tokens:
+        for syn in INSTITUTIONAL_SYNONYMS.get(t, []):
+            if syn not in seen:
+                expanded.append(syn)
+                seen.add(syn)
+    return expanded
+
+
 def _stem_spanish_plural(word: str) -> str:
     """Normalización ligera de plurales en español sin dependencias externas."""
     if len(word) <= 4:
@@ -267,7 +297,7 @@ class RAGEngine:
         if not chunks:
             return []
 
-        query_tokens = tokenize_bm25(query)
+        query_tokens = expand_query_synonyms(tokenize_bm25(query))
 
         # Incorporar términos clave del historial reciente con menor peso para preguntas de seguimiento
         history_tokens: List[str] = []
@@ -462,7 +492,7 @@ class RAGEngine:
 
             if client:
                 model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
-                models_to_try = [model_name, "gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite"]
+                models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-2.5-flash"]))
                 full_prompt = f"{system_instruction}\n\n{user_prompt}"
                 for candidate_model in models_to_try:
                     try:
@@ -473,10 +503,11 @@ class RAGEngine:
                         if response and response.text:
                             answer = response.text
                             self._record_session_turn(session_id, query, answer)
-                            self._save_to_cache(cache_key, {
-                                "answer": answer,
-                                "sources": unique_sources
-                            })
+                            if not history:
+                                self._save_to_cache(cache_key, {
+                                    "answer": answer,
+                                    "sources": unique_sources
+                                })
                             return {
                                 "answer": answer,
                                 "sources": unique_sources,
@@ -499,7 +530,8 @@ class RAGEngine:
                 )
                 answer = completion.choices[0].message.content
                 self._record_session_turn(session_id, query, answer)
-                self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
+                if not history:
+                    self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
                 return {
                     "answer": answer,
                     "sources": unique_sources,
@@ -511,7 +543,8 @@ class RAGEngine:
         # 4. Strategy C: High-Fidelity Local Synthesis (Fallback sin API key)
         answer = self._synthesize_local(query, contexts, student=active_student)
         self._record_session_turn(session_id, query, answer)
-        self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
+        if not history:
+            self._save_to_cache(cache_key, {"answer": answer, "sources": unique_sources})
         return {
             "answer": answer,
             "sources": unique_sources,
@@ -559,7 +592,8 @@ class RAGEngine:
                 query=query,
                 channel="web",
                 answer=msg,
-                sources=[]
+                sources=[],
+                is_gap_override=False
             )
             yield f"data: {json.dumps({'type': 'token', 'content': msg})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'sources': [], 'student': active_student, 'query_id': query_id})}\n\n"
@@ -571,7 +605,8 @@ class RAGEngine:
                 query=query,
                 channel="web",
                 answer=msg,
-                sources=[]
+                sources=[],
+                is_gap_override=True
             )
             yield f"data: {json.dumps({'type': 'token', 'content': msg})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'sources': [], 'student': active_student, 'query_id': query_id})}\n\n"
@@ -588,7 +623,7 @@ class RAGEngine:
 
         if current_api_key and gemini_client:
             model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
-            models_to_try = [model_name, "gemini-3.5-flash", "gemini-flash-lite-latest"]
+            models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-2.5-flash"]))
             for candidate_model in models_to_try:
                 try:
                     # Streaming asíncrono nativo (no bloquea el event loop de FastAPI)
@@ -605,8 +640,12 @@ class RAGEngine:
                         break
                 except Exception as e:
                     print(f"[!] Error streaming async con {candidate_model}: {e}")
+                    # Si ya emitimos texto parcial al cliente, no reintentar otro modelo para evitar duplicar texto
+                    if full_answer:
+                        stream_success = True
+                        break
 
-        if not stream_success:
+        if not stream_success and not full_answer:
             res = await asyncio.to_thread(
                 self.generate_response, query, session_id=session_id, student_cedula=student_cedula
             )
@@ -619,16 +658,18 @@ class RAGEngine:
                 await asyncio.sleep(0.015)
 
         self._record_session_turn(session_id, query, full_answer)
-        self._save_to_cache(cache_key, {
-            "answer": full_answer,
-            "sources": unique_sources
-        })
+        if not history:
+            self._save_to_cache(cache_key, {
+                "answer": full_answer,
+                "sources": unique_sources
+            })
 
         query_id = analytics.record_query(
             query=query,
             channel="web",
             answer=full_answer,
-            sources=unique_sources
+            sources=unique_sources,
+            is_gap_override=False if active_student else None
         )
 
         yield f"data: {json.dumps({'type': 'done', 'sources': unique_sources, 'student': active_student, 'query_id': query_id})}\n\n"

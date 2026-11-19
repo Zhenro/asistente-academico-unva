@@ -53,6 +53,17 @@ class TestBM25AndRAG(unittest.TestCase):
         results = rag_engine.retrieve("receta de pasta carbonara con parmesano")
         self.assertEqual(results, [], "Consultas fuera de dominio no deben devolver chunks arbitrarios")
 
+    def test_bm25_synonym_expansion(self):
+        results = rag_engine.retrieve("como pago la mensualidad")
+        self.assertTrue(len(results) > 0, "Sinónimo 'mensualidad' debe recuperar info de pagos/Cashea")
+
+    def test_analytics_topic_with_accents_and_csv_safety(self):
+        self.assertEqual(analytics._classify_topic("requisitos de inscripción"), "Admisión y TernaNet")
+        self.assertEqual(analytics._classify_topic("ubicación sede Anzoátegui"), "Sedes y Contacto")
+        self.assertEqual(analytics._classify_topic("carrera de Informática"), "Oferta Académica y Turnos")
+        self.assertEqual(analytics._safe_csv_cell("=CMD|'/C calc'!A0"), "'=CMD|'/C calc'!A0")
+        self.assertNotIn("\n", analytics._safe_csv_cell("linea 1\nlinea 2"))
+
 
 class TestTernaNetStudents(unittest.TestCase):
     def test_all_seven_students_loaded(self):
@@ -82,6 +93,7 @@ class TestTernaNetStudents(unittest.TestCase):
 class TestAPIEndpoints(unittest.TestCase):
     def setUp(self):
         api_module._RATE_LIMIT_BUCKETS.clear()
+        api_module._ADMIN_LOGIN_BUCKETS.clear()
         self.client = TestClient(app)
         self._backup_analytics = analytics._load_data()
 
@@ -194,6 +206,26 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(res_after.status_code, 200)
         self.assertIsNone(res_after.json()["student"])
         self.assertNotIn("Paola", res_after.json()["answer"])
+
+    def test_admin_login_rate_limit(self):
+        with patch.object(api_module, "ADMIN_LOGIN_MAX_ATTEMPTS", 2):
+            r1 = self.client.post("/api/admin/login", json={"password": "wrong"})
+            r2 = self.client.post("/api/admin/login", json={"password": "wrong"})
+            r3 = self.client.post("/api/admin/login", json={"password": "wrong"})
+            self.assertEqual(r1.status_code, 401)
+            self.assertEqual(r2.status_code, 401)
+            self.assertEqual(r3.status_code, 429)
+
+    def test_greeting_is_not_flagged_as_knowledge_gap(self):
+        res = self.client.post("/api/chat/stream", json={
+            "message": "hola",
+            "session_id": "gap_check_sess"
+        })
+        self.assertEqual(res.status_code, 200)
+        summary = analytics.get_analytics_summary()
+        latest = summary["recent_queries"][0]
+        self.assertEqual(latest["query"], "hola")
+        self.assertFalse(latest["is_gap"])
 
 
 if __name__ == "__main__":

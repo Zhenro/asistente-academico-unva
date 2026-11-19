@@ -2,10 +2,13 @@
 Módulo de Analítica, Métricas de Satisfacción y Detección de Vacíos Normativos para el IUTECP.
 """
 import os
+import io
+import csv
 import json
 import uuid
 import threading
 import tempfile
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -48,46 +51,65 @@ def _save_data(data: Dict[str, Any]):
         print(f"[!] Error guardando analytics.json: {e}")
 
 
+def _normalize(text: str) -> str:
+    nfkd = unicodedata.normalize("NFKD", (text or "").lower())
+    return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
+
+
 def _classify_topic(query: str) -> str:
-    q = query.lower()
-    if any(k in q for k in ["cashea", "cuota", "pago", "pagar", "arancel", "costo", "precio", "banco", "transferencia"]):
+    q = _normalize(query)
+    if any(k in q for k in ["cashea", "cuota", "pago", "pagar", "arancel", "costo", "precio", "banco", "transferencia", "mensualidad", "matricula"]):
         return "Pagos y Cashea"
     if any(k in q for k in ["sede", "guatire", "caracas", "barcelona", "puerto la cruz", "anzoategui", "ubicacion", "telefono", "direccion"]):
         return "Sedes y Contacto"
-    if any(k in q for k in ["nota", "pi", "inasistencia", "corte", "aprobar", "aprobatoria", "evaluacion", "examen"]):
+    if any(k in q for k in ["nota", "pi", "inasistencia", "corte", "aprobar", "aprobatoria", "evaluacion", "examen", "raspar", "promedio"]):
         return "Notas y Reglamentos (PI)"
-    if any(k in q for k in ["ingreso", "bachiller", "requisito", "recaudo", "carpeta", "inscripcion", "inscribir", "ternanet"]):
+    if any(k in q for k in ["ingreso", "bachiller", "requisito", "recaudo", "carpeta", "inscripcion", "inscribir", "ternanet", "admision"]):
         return "Admisión y TernaNet"
-    if any(k in q for k in ["servicio comunitario", "comunitario", "pasantia", "grado", "solvencia", "titulo"]):
+    if any(k in q for k in ["servicio comunitario", "comunitario", "pasantia", "grado", "solvencia", "titulo", "tesis"]):
         return "Servicio Comunitario y Grado"
-    if any(k in q for k in ["carrera", "informatica", "administracion", "contaduria", "mercadeo", "publicidad", "turno", "sabatino", "nocturno"]):
+    if any(k in q for k in ["carrera", "informatica", "administracion", "contaduria", "mercadeo", "publicidad", "turno", "sabatino", "nocturno", "horario"]):
         return "Oferta Académica y Turnos"
     return "Otras Consultas"
 
 
-def _is_knowledge_gap(answer: str, sources: List[str]) -> bool:
-    """Detecta si la respuesta del asistente indica un vacío normativo o falta de datos."""
-    ans = answer.lower()
-    if not sources or len(sources) == 0:
-        return True
+def _is_knowledge_gap(answer: str, sources: List[str], is_gap_override: Optional[bool] = None) -> bool:
+    """Detecta si la respuesta del asistente indica un vacío normativo real."""
+    if is_gap_override is not None:
+        return is_gap_override
+    ans = _normalize(answer)
     indicators = [
-        "no dispongo de información oficial",
+        "no encontre informacion relevante",
+        "no dispongo de informacion oficial",
         "no se encuentra en las normativas",
         "no se especifica en los reglamentos",
         "no aparece en los documentos",
         "te sugiero consultar directamente en control de estudios",
-        "no cuento con esa información",
+        "no cuento con esa informacion",
         "no tengo registro de",
-        "no está disponible en las fuentes oficiales"
+        "no esta disponible en las fuentes oficiales"
     ]
-    return any(ind in ans for ind in indicators)
+    if any(ind in ans for ind in indicators):
+        return True
+    if not sources or len(sources) == 0:
+        # Evitar falsos vacíos en saludos o respuestas de expediente TernaNet
+        if any(ok in ans for ok in ["modo general", "modo personalizado", "con mucho gusto", "expediente", "ternanet"]):
+            return False
+        return True
+    return False
 
 
-def record_query(query: str, channel: str, answer: str, sources: List[str]) -> str:
+def record_query(
+    query: str,
+    channel: str,
+    answer: str,
+    sources: List[str],
+    is_gap_override: Optional[bool] = None
+) -> str:
     """Registra una consulta en la base de datos de analítica."""
     query_id = "q_" + uuid.uuid4().hex[:10]
     topic = _classify_topic(query)
-    is_gap = _is_knowledge_gap(answer, sources)
+    is_gap = _is_knowledge_gap(answer, sources, is_gap_override=is_gap_override)
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     entry = {
@@ -200,22 +222,33 @@ def get_analytics_summary() -> Dict[str, Any]:
     }
 
 
+def _safe_csv_cell(value: str) -> str:
+    """Previene CSV/Formula Injection al abrir el archivo en Excel y limpia saltos de línea."""
+    text = str(value or "").replace("\r\n", " ").replace("\n", " ").strip()
+    if text and text[0] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + text
+    return text
+
+
 def export_csv() -> str:
-    """Genera un archivo CSV en texto plano con el registro histórico de consultas."""
+    """Genera un archivo CSV seguro (RFC 4180 + anti-CSV-injection) con el historial de consultas."""
     data = _load_data()
     queries = data.get("queries", [])
-    lines = ["ID,Fecha,Canal,Tema,Consulta,Vacio_Normativo,Calificacion,Comentario"]
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["ID", "Fecha", "Canal", "Tema", "Consulta", "Vacio_Normativo", "Calificacion", "Comentario"])
     for q in queries:
-        qid = q.get("id", "")
-        ts = q.get("timestamp", "")
-        ch = q.get("channel", "")
-        top = f'"{q.get("topic", "")}"'
-        query_esc = f'"{q.get("query", "").replace(chr(34), chr(39))}"'
-        gap = "SI" if q.get("is_gap") else "NO"
-        rat = q.get("rating") or "Sin calificar"
-        comm = f'"{q.get("comment", "").replace(chr(34), chr(39))}"' if q.get("comment") else ""
-        lines.append(f"{qid},{ts},{ch},{top},{query_esc},{gap},{rat},{comm}")
-    return "\n".join(lines)
+        writer.writerow([
+            _safe_csv_cell(q.get("id", "")),
+            _safe_csv_cell(q.get("timestamp", "")),
+            _safe_csv_cell(q.get("channel", "")),
+            _safe_csv_cell(q.get("topic", "")),
+            _safe_csv_cell(q.get("query", "")),
+            "SI" if q.get("is_gap") else "NO",
+            _safe_csv_cell(q.get("rating") or "Sin calificar"),
+            _safe_csv_cell(q.get("comment") or "")
+        ])
+    return buf.getvalue()
 
 
 def reset_analytics():

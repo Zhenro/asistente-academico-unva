@@ -2,96 +2,107 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>IUTECP - Panel de Gestión Académica y Analítica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Secretaría Académica · IUTECP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #0b3954;
-      --primary-dark: #062235;
-      --primary-light: #e0f2fe;
-      --accent: #d97706;
-      --accent-soft: #fef3c7;
-      --success: #059669;
-      --success-soft: #d1fae5;
-      --danger: #dc2626;
-      --danger-soft: #fee2e2;
-      --bg-page: #f8fafc;
-      --bg-surface: #ffffff;
-      --border: #e2e8f0;
-      --border-focus: #2563eb;
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-dark: #0f2952;
+      --primary-soft: #eff6ff;
+      --bg-page: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
       --text-main: #0f172a;
+      --text-secondary: #334155;
       --text-muted: #64748b;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --success: #059669;
+      --success-soft: #ecfdf5;
+      --warning: #d97706;
+      --warning-soft: #fffbeb;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --radius-lg: 14px;
+      --radius-md: 10px;
       --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background-color: var(--bg-page);
-      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-page);
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* BARRA SUPERIOR */
-    header {
-      background: #ffffff;
+    /* ================= HEADER ================= */
+    .topbar {
+      background: var(--bg-card);
       border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       position: sticky;
       top: 0;
       z-index: 40;
+      box-shadow: var(--shadow-xs);
     }
 
-    .brand-wrap {
+    .topbar-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .brand-logo {
+    .brand-badge {
       width: 40px;
       height: 40px;
-      border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
       color: #ffffff;
-      font-weight: 800;
-      font-size: 1.15rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: var(--shadow-sm);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25);
+      flex-shrink: 0;
     }
 
-    .brand-text h1 {
-      font-size: 1.05rem;
+    .brand-info h1 {
+      font-size: 1rem;
       font-weight: 800;
       color: var(--primary-dark);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
     }
 
-    .brand-text p {
+    .brand-info p {
       font-size: 0.76rem;
       color: var(--text-muted);
       font-weight: 500;
+      margin-top: 2px;
     }
 
     .header-actions {
@@ -100,346 +111,543 @@
       gap: 10px;
     }
 
-    .btn {
+    .live-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 14px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      border-radius: var(--radius-sm);
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--success-soft);
+      color: var(--success);
+      font-size: 0.74rem;
+      font-weight: 700;
+      border: 1px solid #a7f3d0;
     }
 
-    .btn-secondary {
-      background: #ffffff;
-      border-color: var(--border);
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+    }
+
+    /* ================= TABS BAR ================= */
+    .tabs-wrapper {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-tabs-bar {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .nav-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.16s ease;
+      outline: none;
+    }
+
+    .nav-tab-btn:hover {
+      background: var(--bg-subtle);
       color: var(--text-main);
     }
-    .btn-secondary:hover {
-      background: #f1f5f9;
-      border-color: var(--text-muted);
+
+    .nav-tab-btn.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: #bfdbfe;
+      font-weight: 700;
+    }
+
+    .nav-tab-btn:focus-visible {
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2);
+    }
+
+    /* ================= BUTTONS ================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.16s ease;
+      outline: none;
+    }
+
+    .btn:focus-visible {
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2);
     }
 
     .btn-primary {
       background: var(--primary);
       color: #ffffff;
     }
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
+    .btn-primary:hover { background: var(--primary-hover); }
 
-    .btn-danger {
-      background: #ffffff;
-      border-color: #fca5a5;
-      color: var(--danger);
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border-color: var(--border-strong);
     }
-    .btn-danger:hover {
-      background: var(--danger-soft);
-      border-color: var(--danger);
+    .btn-secondary:hover {
+      background: var(--bg-subtle);
+      border-color: #94a3b8;
+      color: var(--text-main);
     }
 
     .btn-success {
       background: var(--success);
       color: #ffffff;
     }
-    .btn-success:hover {
-      background: #047857;
+    .btn-success:hover { background: #047857; }
+
+    .btn-danger-outline {
+      background: var(--bg-card);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    .btn-danger-outline:hover {
+      background: var(--danger-soft);
+      border-color: #fca5a5;
     }
 
-    /* PESTAÑAS DE NAVEGACIÓN (TABS) */
-    .nav-tabs-bar {
-      background: #ffffff;
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      display: flex;
-      gap: 20px;
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 0.76rem;
     }
 
-    .nav-tab-btn {
-      padding: 14px 4px;
-      font-size: 0.86rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
-    .nav-tab-btn:hover {
-      color: var(--primary);
-    }
-
-    .nav-tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    /* CONTENEDOR PRINCIPAL */
+    /* ================= MAIN LAYOUT ================= */
     main {
-      flex: 1;
-      max-width: 1120px;
+      max-width: 1240px;
       width: 100%;
       margin: 0 auto;
-      padding: 24px 20px 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+      padding: 24px;
+      flex: 1;
     }
 
-    .tab-content {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
+    .hidden { display: none !important; }
 
-    .tab-content.hidden {
-      display: none;
-    }
-
-    /* TARJETAS DE MÉTRICAS */
+    /* ================= KPI METRICS ================= */
     .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
+      margin-bottom: 22px;
     }
 
     .metric-card {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-lg);
       padding: 18px 20px;
-      box-shadow: var(--shadow-sm);
       display: flex;
-      align-items: center;
-      gap: 16px;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: var(--shadow-xs);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      min-width: 0;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--border-strong);
     }
 
     .metric-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-sm);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.45rem;
       flex-shrink: 0;
     }
-
-    .metric-icon.blue { background: var(--primary-light); color: var(--primary); }
-    .metric-icon.amber { background: var(--accent-soft); color: var(--accent); }
+    .metric-icon.blue { background: var(--primary-soft); color: var(--primary); }
     .metric-icon.green { background: var(--success-soft); color: var(--success); }
+    .metric-icon.amber { background: var(--warning-soft); color: var(--warning); }
     .metric-icon.red { background: var(--danger-soft); color: var(--danger); }
+
+    .metric-data {
+      min-width: 0;
+      flex: 1;
+    }
 
     .metric-data h3 {
       font-size: 1.45rem;
       font-weight: 800;
       color: var(--text-main);
-      line-height: 1.1;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric-data h3.bot-handle {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-top: 3px;
     }
 
     .metric-data p {
       font-size: 0.78rem;
       color: var(--text-muted);
       font-weight: 500;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     .metric-sub {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
       font-size: 0.72rem;
       color: var(--text-muted);
-      margin-top: 4px;
-      display: flex;
-      gap: 6px;
     }
 
-    .tag-badge {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
-    .tag-blue { background: #dbeafe; color: #1e40af; }
-    .tag-green { background: #dcfce7; color: #15803d; }
-    .tag-red { background: #fee2e2; color: #991b1b; }
-
-    /* TARJETAS DE CONTENIDO */
+    /* ================= CARDS ================= */
     .card {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-xs);
     }
 
-    .card-title-row {
+    .card-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      justify-content: space-between;
+      gap: 14px;
       flex-wrap: wrap;
-      gap: 12px;
+      margin-bottom: 16px;
     }
 
-    .card-title-row h2 {
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: var(--primary-dark);
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-title-group h2 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .card-title-group .card-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: block;
+    }
+
+    .card-tools {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
-    /* ZONA DE CARGA DE DOCUMENTOS (DRAG & DROP) */
+    /* ================= SEARCH INPUT ================= */
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 11px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-input {
+      padding: 7px 12px 7px 34px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      background: var(--bg-subtle);
+      width: 230px;
+      outline: none;
+      transition: all 0.16s ease;
+    }
+
+    .search-input:focus {
+      background: var(--bg-card);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+    }
+
+    /* ================= DROPZONE ================= */
     .dropzone {
-      border: 2px dashed #cbd5e1;
+      border: 1.5px dashed #93c5fd;
       border-radius: var(--radius-md);
-      padding: 32px 20px;
+      background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+      padding: 28px 20px;
       text-align: center;
       cursor: pointer;
-      background: #f8fafc;
       transition: all 0.2s ease;
     }
 
     .dropzone:hover, .dropzone.dragover {
       border-color: var(--primary);
-      background: #f0fdf4;
-      transform: scale(1.005);
+      background: #eff6ff;
+      box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.08);
     }
 
-    .dropzone-icon {
-      font-size: 2.2rem;
-      margin-bottom: 8px;
+    .dropzone-icon-wrap {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 12px;
+      background: #ffffff;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #dbeafe;
     }
 
     .dropzone h4 {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      color: var(--text-main);
+      color: var(--primary-dark);
       margin-bottom: 4px;
     }
 
     .dropzone p {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
     }
 
-    #fileInput {
-      display: none;
-    }
+    .dropzone input[type="file"] { display: none; }
 
-    /* TABLA */
+    /* ================= TABLES ================= */
     .table-container {
+      width: 100%;
       overflow-x: auto;
-      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      text-align: left;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
+    }
+
+    thead {
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
     }
 
     th {
-      background: #f8fafc;
-      color: var(--text-muted);
+      text-align: left;
+      padding: 11px 14px;
+      font-size: 0.71rem;
       font-weight: 700;
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.76rem;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      white-space: nowrap;
     }
 
     td {
-      padding: 13px 14px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border);
-      color: var(--text-main);
+      color: var(--text-secondary);
+      vertical-align: middle;
     }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
+    tbody tr:last-child td { border-bottom: none; }
 
-    tr:hover td {
+    tbody tr:hover {
       background: #f8fafc;
     }
+
+    .nowrap { white-space: nowrap; }
 
     .pdf-name-cell {
       display: flex;
       align-items: center;
       gap: 10px;
       font-weight: 600;
+      color: var(--text-main);
     }
 
     .pdf-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 7px;
+      border-radius: 6px;
       background: #fee2e2;
       color: #b91c1c;
       font-size: 0.68rem;
       font-weight: 800;
-      padding: 3px 6px;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
     }
 
     .table-actions {
-      display: flex;
+      display: inline-flex;
       align-items: center;
+      justify-content: flex-end;
       gap: 8px;
+      white-space: nowrap;
     }
 
-    /* GRÁFICO DE TOP TEMAS */
-    .topic-bar-row {
+    /* ================= BADGES & TAGS ================= */
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tag-blue { background: #dbeafe; color: #1d4ed8; }
+    .tag-green { background: #d1fae5; color: #047857; }
+    .tag-amber { background: #fef3c7; color: #b45309; }
+    .tag-red { background: #fee2e2; color: #b91c1c; }
+    .tag-slate { background: #e2e8f0; color: #334155; }
+
+    /* ================= ANALYTICS SPLIT ================= */
+    .analytics-split {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .topic-row {
       margin-bottom: 14px;
     }
+    .topic-row:last-child { margin-bottom: 0; }
 
-    .topic-bar-header {
+    .topic-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 0.82rem;
-      font-weight: 600;
+      align-items: center;
+      font-size: 0.8rem;
       margin-bottom: 6px;
     }
+    .topic-meta strong { color: var(--text-main); font-weight: 600; }
+    .topic-meta span { color: var(--text-muted); font-weight: 600; font-size: 0.75rem; }
 
-    .topic-progress-bg {
+    .progress-track {
+      height: 8px;
       background: #e2e8f0;
-      border-radius: 6px;
-      height: 9px;
+      border-radius: 999px;
       overflow: hidden;
     }
 
-    .topic-progress-fill {
+    .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--primary), #2563eb);
-      border-radius: 6px;
-      transition: width 0.5s ease;
+      background: linear-gradient(90deg, var(--primary), #3b82f6);
+      border-radius: 999px;
+      transition: width 0.4s ease;
     }
 
-    /* DOS COLUMNAS EN ANALÍTICA */
-    .analytics-split {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-      gap: 20px;
+    /* ================= STUDENTS AVATAR & PROGRESS ================= */
+    .student-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    /* MODAL DE LOGIN */
+    .student-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: #ffffff;
+      font-size: 0.74rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mini-bar-wrap {
+      width: 110px;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .mini-bar-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 999px;
+    }
+
+    /* ================= LOGIN MODAL ================= */
     .login-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(6, 34, 53, 0.7);
+      background: rgba(15, 23, 42, 0.55);
       backdrop-filter: blur(6px);
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
@@ -447,106 +655,104 @@
     }
 
     .login-card {
-      background: #ffffff;
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      max-width: 400px;
+      background: var(--bg-card);
+      border-radius: 18px;
+      padding: 32px 28px;
       width: 100%;
-      box-shadow: var(--shadow-lg);
+      max-width: 400px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
       text-align: center;
-      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes popIn {
-      from { transform: scale(0.92); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .login-icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
+    .login-card .brand-badge {
+      width: 52px;
+      height: 52px;
+      font-size: 1.15rem;
+      margin: 0 auto 14px;
     }
 
     .login-card h2 {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 800;
       color: var(--primary-dark);
       margin-bottom: 6px;
     }
 
     .login-card p {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       margin-bottom: 20px;
-      line-height: 1.45;
     }
 
-    .login-form input {
+    .login-input {
       width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
+      padding: 11px 14px;
+      border: 1.5px solid var(--border-strong);
       border-radius: var(--radius-sm);
-      font-size: 0.95rem;
       font-family: inherit;
+      font-size: 0.88rem;
       outline: none;
-      margin-bottom: 14px;
-      transition: all 0.2s;
+      margin-bottom: 12px;
+      transition: border-color 0.16s ease;
     }
 
-    .login-form input:focus {
+    .login-input:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(11, 57, 84, 0.15);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
     }
 
-    .login-btn {
-      width: 100%;
-      padding: 12px;
-      background: var(--primary);
-      color: #ffffff;
-      font-size: 0.9rem;
-      font-weight: 700;
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: background 0.2s;
+    .login-error {
+      font-size: 0.78rem;
+      color: var(--danger);
+      margin-bottom: 12px;
+      display: none;
+      font-weight: 600;
     }
 
-    .login-btn:hover {
-      background: var(--primary-dark);
-    }
-
-    /* TOAST ALERTS */
+    /* ================= TOAST ================= */
     .toast-box {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      z-index: 110;
+      z-index: 200;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .toast {
-      background: #ffffff;
-      border-left: 4px solid var(--primary);
-      box-shadow: var(--shadow-lg);
-      padding: 12px 18px;
+      background: var(--primary-dark);
+      color: #ffffff;
+      padding: 11px 16px;
       border-radius: var(--radius-sm);
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       font-weight: 600;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      animation: slideIn 0.3s ease;
+      box-shadow: var(--shadow-md);
+      animation: slideUp 0.2s ease;
     }
 
-    .toast.success { border-left-color: var(--success); }
-    .toast.danger { border-left-color: var(--danger); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
 
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ================= RESPONSIVE ================= */
+    @media (max-width: 1024px) {
+      .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-split { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+      main { padding: 16px; }
+      .topbar-inner { padding: 12px 16px; }
+      .nav-tabs-bar { padding: 8px 16px; }
+      .search-input { width: 100%; }
+      .live-pill { display: none; }
     }
   </style>
 </head>
@@ -555,57 +761,87 @@
   <!-- MODAL DE AUTENTICACIÓN -->
   <div class="login-overlay" id="loginModal">
     <div class="login-card">
-      <div class="login-icon">🔐</div>
-      <h2>Acceso Administrativo</h2>
-      <p>Introduce la contraseña autorizada de Secretaría o Control de Estudios del IUTECP:</p>
-      <form class="login-form" onsubmit="handleLogin(event)">
-        <input type="password" id="adminPassInput" placeholder="Contraseña de administrador" autofocus required autocomplete="current-password">
-        <button type="submit" class="login-btn">Entrar al Panel</button>
+      <div class="brand-badge">IU</div>
+      <h2>Secretaría Académica IUTECP</h2>
+      <p>Ingresa la clave administrativa para gestionar documentos RAG, analíticas y expedientes.</p>
+      <form onsubmit="handleLogin(event)">
+        <input
+          type="password"
+          id="adminPassInput"
+          class="login-input"
+          placeholder="Contraseña de administrador"
+          autocomplete="current-password"
+          required
+        >
+        <div class="login-error" id="loginErrorMsg"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 11px;">
+          Acceder al Panel
+        </button>
       </form>
+      <div style="margin-top: 14px;">
+        <a href="/" style="font-size: 0.78rem; color: var(--text-muted); text-decoration: none; font-weight: 600;">
+          ← Volver al Asistente Estudiantil
+        </a>
+      </div>
     </div>
   </div>
 
-  <!-- HEADER -->
-  <header>
-    <div class="brand-wrap">
-      <div class="brand-logo">IU</div>
-      <div class="brand-text">
-        <h1>IUTECP · Secretaría Académica</h1>
-        <p>Panel de Gestión de Conocimiento RAG y Analítica Institucional</p>
+  <!-- BARRA SUPERIOR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">IU</div>
+        <div class="brand-info">
+          <h1>IUTECP · Secretaría Académica</h1>
+          <p>Panel de Gestión de Conocimiento RAG y Analítica Institucional</p>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <a href="/" class="btn btn-secondary" target="_blank" title="Abrir Asistente">
-        <span>💬 Ver Asistente Web</span>
-      </a>
-      <button class="btn btn-danger" onclick="logout()" title="Cerrar sesión">
-        <span>Salir</span>
-      </button>
+
+      <div class="header-actions">
+        <span class="live-pill">
+          <span class="live-dot"></span>
+          Motor RAG Activo
+        </span>
+        <a href="/" class="btn btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Ver Asistente Web
+        </a>
+        <button class="btn btn-danger-outline" onclick="logout()" title="Cerrar sesión">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Salir
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- PESTAÑAS DE NAVEGACIÓN -->
-  <div class="nav-tabs-bar">
-    <button class="nav-tab-btn active" id="tabBtnDocs" onclick="switchTab('docs')">
-      <span>📁 Gestión de Documentos PDF</span>
-    </button>
-    <button class="nav-tab-btn" id="tabBtnAnalytics" onclick="switchTab('analytics')">
-      <span>📊 Analítica y Vacíos Normativos</span>
-    </button>
-    <button class="nav-tab-btn" id="tabBtnStudents" onclick="switchTab('students')">
-      <span>🎓 Estudiantes TernaNet</span>
-    </button>
+  <!-- NAVEGACIÓN DE PESTAÑAS -->
+  <div class="tabs-wrapper">
+    <nav class="nav-tabs-bar" aria-label="Secciones administrativas">
+      <button class="nav-tab-btn active" id="tabBtnDocs" onclick="switchTab('docs')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Gestión de Documentos PDF
+      </button>
+      <button class="nav-tab-btn" id="tabBtnAnalytics" onclick="switchTab('analytics')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analítica y Vacíos Normativos
+      </button>
+      <button class="nav-tab-btn" id="tabBtnStudents" onclick="switchTab('students')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        Estudiantes TernaNet
+      </button>
+    </nav>
   </div>
 
   <main>
     <!-- ==========================================
-         PESTAÑA 1: GESTIÓN DE DOCUMENTOS
+         PESTAÑA 1: GESTIÓN DE DOCUMENTOS PDF
          ========================================== -->
     <div class="tab-content" id="tabDocs">
-      <!-- RESUMEN DE MÉTRICAS RAG -->
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-icon blue">📚</div>
+          <div class="metric-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
           <div class="metric-data">
             <h3 id="statDocsCount">-</h3>
             <p>Documentos Normativos</p>
@@ -613,15 +849,19 @@
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon amber">🧩</div>
+          <div class="metric-icon amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
           <div class="metric-data">
             <h3 id="statChunksCount">-</h3>
-            <p>Fragmentos Indexados en RAG</p>
+            <p>Fragmentos BM25 Indexados</p>
           </div>
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon green">⚡</div>
+          <div class="metric-icon green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
           <div class="metric-data">
             <h3>&lt; 35 MB</h3>
             <p>Memoria RAM en la Nube</p>
@@ -629,42 +869,62 @@
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon blue">📱</div>
+          <div class="metric-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
           <div class="metric-data">
-            <h3>@IutecpAsistenteBot</h3>
-            <p>Telegram 24/7 Conectado</p>
+            <h3 class="bot-handle">@IutecpAsistenteBot</h3>
+            <p>Canal Telegram 24/7</p>
           </div>
         </div>
       </div>
 
-      <!-- SUBIR NUEVO DOCUMENTO -->
+      <!-- CARGA DE DOCUMENTOS -->
       <div class="card">
-        <div class="card-title-row">
-          <h2>
-            <span>📤 Cargar Nuevo Documento Oficial</span>
-          </h2>
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-title-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div>
+              <h2>Cargar Nuevo Documento Oficial</h2>
+              <span class="card-sub">Los PDFs se validan e indexan al instante en el motor BM25</span>
+            </div>
+          </div>
           <button class="btn btn-secondary" onclick="triggerReindex()" id="reindexBtn">
-            <span>🔄 Reindexar Todo en Caliente</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Reindexar Todo en Caliente
           </button>
         </div>
 
         <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-          <div class="dropzone-icon">📄</div>
+          <div class="dropzone-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+          </div>
           <h4>Arrastra aquí un archivo PDF o haz clic para seleccionarlo</h4>
-          <p>Normativas, calendarios de exámenes, circulares o instructivos oficiales (Formato .PDF)</p>
+          <p>Normativas, calendarios de exámenes, circulares o instructivos oficiales (Formato .PDF · Máx. 10 MB)</p>
           <input type="file" id="fileInput" accept=".pdf" onchange="uploadSelectedFile(event)">
         </div>
       </div>
 
-      <!-- LISTADO DE DOCUMENTOS ACTIVOS -->
+      <!-- INVENTARIO DE DOCUMENTOS -->
       <div class="card">
-        <div class="card-title-row">
-          <h2>
-            <span>📋 Inventario de Documentos Activos en el Asistente</span>
-          </h2>
-          <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">
-            Los cambios se sincronizan en segundos con la Web y con Telegram
-          </span>
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-title-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>
+              <h2>Inventario de Documentos Activos</h2>
+              <span class="card-sub">Sincronizados en tiempo real con la Web y Telegram</span>
+            </div>
+          </div>
+          <div class="card-tools">
+            <div class="search-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="docSearchInput" class="search-input" placeholder="Filtrar documento..." oninput="filterDocumentsTable()">
+            </div>
+          </div>
         </div>
 
         <div class="table-container">
@@ -680,7 +940,7 @@
             </thead>
             <tbody id="documentsTableBody">
               <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">
                   Cargando inventario de normativas...
                 </td>
               </tr>
@@ -694,10 +954,11 @@
          PESTAÑA 2: ANALÍTICA Y VACÍOS NORMATIVOS
          ========================================== -->
     <div class="tab-content hidden" id="tabAnalytics">
-      <!-- MÉTRICAS DE CONSULTAS -->
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-icon blue">💬</div>
+          <div class="metric-icon blue">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
           <div class="metric-data">
             <h3 id="statTotalQueries">0</h3>
             <p>Consultas Estudiantiles</p>
@@ -709,7 +970,9 @@
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon green">⭐</div>
+          <div class="metric-icon green">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          </div>
           <div class="metric-data">
             <h3 id="statSatisfactionRate">100%</h3>
             <p>Índice de Aprobación</p>
@@ -718,46 +981,59 @@
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon red">🚨</div>
+          <div class="metric-icon red">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
           <div class="metric-data">
             <h3 id="statTotalGaps">0</h3>
             <p>Vacíos Normativos</p>
-            <div class="metric-sub">Dudas sin respuesta en los PDFs</div>
+            <div class="metric-sub">Dudas sin cobertura en PDFs</div>
           </div>
         </div>
 
         <div class="metric-card">
-          <div class="metric-icon amber">⏱️</div>
+          <div class="metric-icon amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
           <div class="metric-data">
-            <h3>~1.2s</h3>
-            <p>Velocidad de Respuesta</p>
-            <div class="metric-sub">RAG Ultraliviano</div>
+            <h3>&lt; 300ms</h3>
+            <p>Primer Token (SSE)</p>
+            <div class="metric-sub">Streaming + Caché en RAM</div>
           </div>
         </div>
       </div>
 
-      <!-- SECCIÓN DIVIDIDA: TOP TEMAS + VACÍOS NORMATIVOS -->
       <div class="analytics-split">
-        <!-- TOP TEMAS MÁS CONSULTADOS -->
-        <div class="card">
-          <div class="card-title-row">
-            <h2><span>🔥 Temas Más Consultados</span></h2>
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-title-icon">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <div>
+                <h2>Temas Más Consultados</h2>
+                <span class="card-sub">Distribución automática por categoría académica</span>
+              </div>
+            </div>
           </div>
           <div id="topicsContainer">
-            <p style="color:var(--text-muted); font-size:0.84rem;">Cargando temas frecuentes...</p>
+            <p style="color: var(--text-muted); font-size: 0.84rem;">Cargando temas frecuentes...</p>
           </div>
         </div>
 
-        <!-- BANDEJA DE VACÍOS NORMATIVOS -->
-        <div class="card">
-          <div class="card-title-row">
-            <h2><span>⚠️ Dudas Sin Respuesta (Vacíos)</span></h2>
-            <span style="font-size:0.75rem; color:var(--text-muted);">Alertas para Secretaría</span>
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-title-icon" style="background: var(--danger-soft); color: var(--danger);">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div>
+                <h2>Dudas Sin Respuesta (Vacíos)</h2>
+                <span class="card-sub">Alertas para actualizar reglamentos en Secretaría</span>
+              </div>
+            </div>
           </div>
-          <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">
-            Preguntas realizadas por estudiantes sobre temas <strong>no contemplados</strong> en los PDFs actuales:
-          </p>
-          <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+          <div class="table-container" style="max-height: 290px; overflow-y: auto;">
             <table>
               <thead>
                 <tr>
@@ -767,23 +1043,32 @@
                 </tr>
               </thead>
               <tbody id="gapsTableBody">
-                <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Sin vacíos detectados</td></tr>
+                <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 20px;">Sin vacíos detectados</td></tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- REGISTRO DE CONSULTAS RECIENTES -->
       <div class="card">
-        <div class="card-title-row">
-          <h2><span>🕒 Registro de Consultas Recientes</span></h2>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-success" onclick="downloadCSVReport()">
-              <span>📥 Exportar CSV (Excel)</span>
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-title-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <h2>Registro de Consultas Recientes</h2>
+              <span class="card-sub">Historial en tiempo real con calificación de satisfacción</span>
+            </div>
+          </div>
+          <div class="card-tools">
+            <button class="btn btn-success btn-sm" onclick="downloadCSVReport()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar CSV
             </button>
-            <button class="btn btn-secondary" onclick="resetAnalyticsConfirm()">
-              <span>🗑️ Limpiar Historial</span>
+            <button class="btn btn-danger-outline btn-sm" onclick="resetAnalyticsConfirm()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Limpiar Historial
             </button>
           </div>
         </div>
@@ -794,7 +1079,7 @@
               <tr>
                 <th>Fecha y Hora</th>
                 <th>Canal</th>
-                <th>Tema Clasificado</th>
+                <th>Tema</th>
                 <th>Consulta Estudiantil</th>
                 <th>Estado</th>
                 <th>Voto</th>
@@ -802,7 +1087,7 @@
             </thead>
             <tbody id="recentQueriesTableBody">
               <tr>
-                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
                   Cargando registro de consultas...
                 </td>
               </tr>
@@ -816,18 +1101,30 @@
          PESTAÑA 3: ESTUDIANTES TERNANET
          ========================================== -->
     <div class="tab-content hidden" id="tabStudents">
-      <div class="panel-card">
-        <div class="panel-header">
-          <div class="panel-titles">
-            <h2>Expedientes Estudiantiles Activos (TernaNet)</h2>
-            <p>Perfiles académicos simulados para atención personalizada con RAG</p>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-title-icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+              <h2>Expedientes Estudiantiles Activos (TernaNet)</h2>
+              <span class="card-sub">Perfiles académicos disponibles para atención personalizada con RAG</span>
+            </div>
           </div>
-          <button class="btn btn-secondary" onclick="loadStudentsAdmin()">
-            <span>🔄 Refrescar Expedientes</span>
-          </button>
+          <div class="card-tools">
+            <div class="search-box">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="studentSearchInput" class="search-input" placeholder="Buscar por nombre o cédula..." oninput="filterStudentsTable()">
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="loadStudentsAdmin()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Refrescar
+            </button>
+          </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-container">
           <table>
             <thead>
               <tr>
@@ -843,7 +1140,7 @@
             </thead>
             <tbody id="studentsTableBody">
               <tr>
-                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
                   Cargando expedientes...
                 </td>
               </tr>
@@ -859,158 +1156,8 @@
   <script>
     let adminToken = localStorage.getItem('iutecp_admin_key') || '';
     let currentTab = 'docs';
-
-    // Inicialización
-    document.addEventListener('DOMContentLoaded', () => {
-      if (adminToken) {
-        checkAuthAndLoad();
-      } else {
-        document.getElementById('loginModal').style.display = 'flex';
-      }
-
-      setupDragAndDrop();
-    });
-
-    function switchTab(tab) {
-      currentTab = tab;
-      const tabDocs = document.getElementById('tabDocs');
-      const tabAnalytics = document.getElementById('tabAnalytics');
-      const tabStudents = document.getElementById('tabStudents');
-      const btnDocs = document.getElementById('tabBtnDocs');
-      const btnAnalytics = document.getElementById('tabBtnAnalytics');
-      const btnStudents = document.getElementById('tabBtnStudents');
-
-      tabDocs.classList.toggle('hidden', tab !== 'docs');
-      tabAnalytics.classList.toggle('hidden', tab !== 'analytics');
-      tabStudents.classList.toggle('hidden', tab !== 'students');
-
-      btnDocs.classList.toggle('active', tab === 'docs');
-      btnAnalytics.classList.toggle('active', tab === 'analytics');
-      btnStudents.classList.toggle('active', tab === 'students');
-
-      if (tab === 'docs') loadDocuments();
-      else if (tab === 'analytics') loadAnalytics();
-      else if (tab === 'students') loadStudentsAdmin();
-    }
-
-    async function loadStudentsAdmin() {
-      const tbody = document.getElementById('studentsTableBody');
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">Cargando expedientes...</td></tr>';
-      try {
-        const res = await fetch('/api/admin/students', {
-          headers: { 'x-admin-key': adminToken }
-        });
-        if (!res.ok) throw new Error('Error al consultar lista de estudiantes');
-        const students = await res.json();
-        tbody.innerHTML = '';
-        students.forEach(st => {
-          const tr = document.createElement('tr');
-          const sc = st.servicio_comunitario || {};
-          const scTxt = typeof sc === 'object' ? `${sc.estatus} (${sc.proyecto || sc.observacion || ''})` : sc;
-          const pas = st.pasantias || {};
-          const pasTxt = typeof pas === 'object' ? `${pas.estatus} (${pas.empresa || pas.observacion || ''})` : pas;
-          
-          let arancelBadge = `<span class="badge ${st.estatus_arancelario === 'Solvente' ? 'badge-success' : 'badge-warning'}">${st.estatus_arancelario}</span>`;
-          if (st.cashea) {
-            arancelBadge += `<div style="font-size:0.72rem; color:var(--text-muted); margin-top:3px;">Cashea: ${st.cashea.cuotas_pagadas}/${st.cashea.cuotas_totales} cuotas</div>`;
-          }
-
-          tr.innerHTML = `
-            <td>
-              <strong style="color:var(--primary-dark); font-size:0.88rem;">${st.nombre}</strong>
-            </td>
-            <td>
-              <code style="font-size:0.8rem;">${st.cedula_formato}</code>
-            </td>
-            <td>
-              <div style="font-weight:600; font-size:0.82rem;">${st.carrera}</div>
-              <small style="color:var(--text-muted);">${st.sede} · Turno ${st.turno}</small>
-            </td>
-            <td>
-              <strong>${st.semestre}to Semestre</strong>
-              <div style="font-size:0.72rem; color:#059669; font-weight:700;">${st.creditos_aprobados}/${st.creditos_totales} UC (${st.porcentaje_carrera}%)</div>
-            </td>
-            <td>
-              <span class="badge badge-success" style="font-size:0.8rem;">${st.promedio} pts</span>
-            </td>
-            <td style="font-size:0.75rem;">
-              ${scTxt}
-            </td>
-            <td style="font-size:0.75rem;">
-              ${pasTxt}
-            </td>
-            <td>
-              ${arancelBadge}
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#dc2626;">Error cargando estudiantes: ${err.message}</td></tr>`;
-      }
-    }
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const pass = document.getElementById('adminPassInput').value.trim();
-      if (!pass) return;
-
-      try {
-        const res = await fetch('/api/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: pass })
-        });
-
-        if (res.ok) {
-          adminToken = pass;
-          localStorage.setItem('iutecp_admin_key', adminToken);
-          document.getElementById('loginModal').style.display = 'none';
-          showToast('Bienvenido al Panel de Control de Secretaría', 'success');
-          loadDocuments();
-        } else {
-          showToast('Contraseña incorrecta. Intenta nuevamente.', 'danger');
-        }
-      } catch (err) {
-        showToast('Error de conexión con el servidor.', 'danger');
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('iutecp_admin_key');
-      location.reload();
-    }
-
-    async function checkAuthAndLoad() {
-      try {
-        const res = await fetch('/api/admin/documents', {
-          headers: { 'x-admin-key': adminToken }
-        });
-
-        if (res.ok) {
-          document.getElementById('loginModal').style.display = 'none';
-          renderDocuments(await res.json());
-        } else {
-          localStorage.removeItem('iutecp_admin_key');
-          document.getElementById('loginModal').style.display = 'flex';
-        }
-      } catch (err) {
-        showToast('Error al verificar credenciales con el servidor.', 'danger');
-      }
-    }
-
-    async function loadDocuments() {
-      try {
-        const res = await fetch('/api/admin/documents', {
-          headers: { 'x-admin-key': adminToken }
-        });
-        if (res.ok) {
-          renderDocuments(await res.json());
-        }
-      } catch (err) {
-        console.error('Error cargando documentos:', err);
-      }
-    }
+    let cachedDocuments = [];
+    let cachedStudents = [];
 
     function escapeHtml(str) {
       return String(str ?? '')
@@ -1021,25 +1168,146 @@
         .replace(/'/g, '&#39;');
     }
 
-    function renderDocuments(data) {
-      document.getElementById('statDocsCount').textContent = data.total_documents;
-      document.getElementById('statChunksCount').textContent = data.total_chunks;
+    function formatOrdinal(n) {
+      const map = { 1: '1er', 2: '2do', 3: '3er', 4: '4to', 5: '5to', 6: '6to', 7: '7mo', 8: '8vo' };
+      return map[Number(n)] || `${n}to`;
+    }
 
+    function getInitials(name) {
+      return String(name || 'IU').split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+    }
+
+    function showToast(msg, type = 'info') {
+      const box = document.getElementById('toastBox');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (adminToken) {
+        checkAuthAndLoad();
+      } else {
+        document.getElementById('loginModal').style.display = 'flex';
+      }
+      setupDragAndDrop();
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tabDocs').classList.toggle('hidden', tab !== 'docs');
+      document.getElementById('tabAnalytics').classList.toggle('hidden', tab !== 'analytics');
+      document.getElementById('tabStudents').classList.toggle('hidden', tab !== 'students');
+
+      document.getElementById('tabBtnDocs').classList.toggle('active', tab === 'docs');
+      document.getElementById('tabBtnAnalytics').classList.toggle('active', tab === 'analytics');
+      document.getElementById('tabBtnStudents').classList.toggle('active', tab === 'students');
+
+      if (tab === 'docs') loadDocuments();
+      else if (tab === 'analytics') loadAnalytics();
+      else if (tab === 'students') loadStudentsAdmin();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pass = document.getElementById('adminPassInput').value.trim();
+      const errEl = document.getElementById('loginErrorMsg');
+      errEl.style.display = 'none';
+      if (!pass) return;
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pass })
+        });
+        if (res.ok) {
+          adminToken = pass;
+          localStorage.setItem('iutecp_admin_key', adminToken);
+          document.getElementById('loginModal').style.display = 'none';
+          document.getElementById('adminPassInput').value = '';
+          showToast('Sesión administrativa iniciada', 'success');
+          loadDocuments();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          errEl.textContent = data.detail || 'Contraseña incorrecta.';
+          errEl.style.display = 'block';
+        }
+      } catch (err) {
+        errEl.textContent = 'Error de conexión con el servidor.';
+        errEl.style.display = 'block';
+      }
+    }
+
+    function logout() {
+      adminToken = '';
+      localStorage.removeItem('iutecp_admin_key');
+      document.getElementById('loginModal').style.display = 'flex';
+    }
+
+    async function checkAuthAndLoad() {
+      try {
+        const res = await fetch('/api/admin/documents', {
+          headers: { 'x-admin-key': adminToken }
+        });
+        if (res.status === 401) {
+          localStorage.removeItem('iutecp_admin_key');
+          adminToken = '';
+          document.getElementById('loginModal').style.display = 'flex';
+          return;
+        }
+        const data = await res.json();
+        cachedDocuments = data.documents || [];
+        document.getElementById('statDocsCount').textContent = data.total_documents ?? 0;
+        document.getElementById('statChunksCount').textContent = data.total_chunks ?? 0;
+        renderDocumentsRows(cachedDocuments);
+      } catch (err) {
+        showToast('No se pudo conectar con el servidor', 'error');
+      }
+    }
+
+    async function loadDocuments() {
+      try {
+        const res = await fetch('/api/admin/documents', {
+          headers: { 'x-admin-key': adminToken }
+        });
+        if (res.status === 401) return logout();
+        const data = await res.json();
+        cachedDocuments = data.documents || [];
+        document.getElementById('statDocsCount').textContent = data.total_documents ?? 0;
+        document.getElementById('statChunksCount').textContent = data.total_chunks ?? 0;
+        filterDocumentsTable();
+      } catch (err) {
+        showToast('Error cargando documentos', 'error');
+      }
+    }
+
+    function filterDocumentsTable() {
+      const q = (document.getElementById('docSearchInput')?.value || '').toLowerCase().trim();
+      const list = q
+        ? cachedDocuments.filter(d => (d.name || '').toLowerCase().includes(q))
+        : cachedDocuments;
+      renderDocumentsRows(list);
+    }
+
+    function renderDocumentsRows(docs) {
       const tbody = document.getElementById('documentsTableBody');
       tbody.innerHTML = '';
 
-      if (!data.documents || data.documents.length === 0) {
+      if (!docs || docs.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
-              No hay documentos PDF en la carpeta. Sube uno arriba para comenzar.
+              No se encontraron documentos PDF.
             </td>
           </tr>
         `;
         return;
       }
 
-      data.documents.forEach(doc => {
+      docs.forEach(doc => {
         const safeName = escapeHtml(doc.name);
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1049,16 +1317,18 @@
               <span>${safeName}</span>
             </div>
           </td>
-          <td>${escapeHtml(doc.size_kb)} KB</td>
-          <td>${escapeHtml(doc.pages)} pág(s)</td>
-          <td>${escapeHtml(doc.modified_at)}</td>
+          <td class="nowrap">${escapeHtml(doc.size_kb)} KB</td>
+          <td class="nowrap">${escapeHtml(doc.pages)} pág(s)</td>
+          <td class="nowrap" style="color: var(--text-muted);">${escapeHtml(doc.modified_at)}</td>
           <td style="text-align: right;">
-            <div class="table-actions" style="justify-content: flex-end;">
-              <button class="btn btn-secondary" onclick="downloadDocument('${safeName}')" title="Descargar PDF">
-                <span>⬇️ Descargar</span>
+            <div class="table-actions">
+              <button class="btn btn-secondary btn-sm" onclick="downloadDocument('${safeName}')" title="Descargar PDF">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Descargar
               </button>
-              <button class="btn btn-danger" onclick="deleteDocument('${safeName}')" title="Eliminar documento">
-                <span>🗑️ Eliminar</span>
+              <button class="btn btn-danger-outline btn-sm" onclick="deleteDocument('${safeName}')" title="Eliminar documento">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                Eliminar
               </button>
             </div>
           </td>
@@ -1067,95 +1337,210 @@
       });
     }
 
+    function setupDragAndDrop() {
+      const dropzone = document.getElementById('dropzone');
+      if (!dropzone) return;
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropzone.addEventListener(evt, e => {
+          e.preventDefault();
+          dropzone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dropzone.addEventListener(evt, e => {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+        });
+      });
+      dropzone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) uploadFile(files[0]);
+      });
+    }
+
+    function uploadSelectedFile(e) {
+      const file = e.target.files[0];
+      if (file) uploadFile(file);
+      e.target.value = '';
+    }
+
+    async function uploadFile(file) {
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        showToast('Solo se permiten archivos en formato PDF', 'error');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      showToast(`Subiendo e indexando ${file.name}...`);
+
+      try {
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: { 'x-admin-key': adminToken },
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Documento cargado con éxito', 'success');
+          loadDocuments();
+        } else {
+          showToast(data.detail || 'Error al subir archivo', 'error');
+        }
+      } catch (err) {
+        showToast('Error de red al subir documento', 'error');
+      }
+    }
+
+    async function downloadDocument(filename) {
+      try {
+        const res = await fetch(`/api/admin/documents/${encodeURIComponent(filename)}/download`, {
+          headers: { 'x-admin-key': adminToken }
+        });
+        if (!res.ok) throw new Error('No disponible');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        showToast('Error al descargar el PDF', 'error');
+      }
+    }
+
+    async function deleteDocument(filename) {
+      if (!confirm(`¿Seguro que deseas eliminar "${filename}" de la base de conocimientos?`)) return;
+      try {
+        const res = await fetch(`/api/admin/documents/${encodeURIComponent(filename)}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-key': adminToken }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Documento eliminado', 'success');
+          loadDocuments();
+        } else {
+          showToast(data.detail || 'No se pudo eliminar', 'error');
+        }
+      } catch (err) {
+        showToast('Error de red al eliminar', 'error');
+      }
+    }
+
+    async function triggerReindex() {
+      const btn = document.getElementById('reindexBtn');
+      btn.disabled = true;
+      btn.textContent = 'Reindexando...';
+      try {
+        const res = await fetch('/api/admin/reindex', {
+          method: 'POST',
+          headers: { 'x-admin-key': adminToken }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || 'Reindexación completada', 'success');
+          loadDocuments();
+        } else {
+          showToast(data.detail || 'Error al reindexar', 'error');
+        }
+      } catch (err) {
+        showToast('Error de conexión', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reindexar Todo en Caliente`;
+      }
+    }
+
+    /* ================= ANALÍTICAS ================= */
     async function loadAnalytics() {
       try {
         const res = await fetch('/api/admin/analytics', {
           headers: { 'x-admin-key': adminToken }
         });
-        if (res.ok) {
-          renderAnalytics(await res.json());
-        }
+        if (res.status === 401) return logout();
+        const data = await res.json();
+        renderAnalytics(data);
       } catch (err) {
-        console.error('Error cargando analítica:', err);
+        showToast('Error cargando analíticas', 'error');
       }
     }
 
     function renderAnalytics(data) {
-      document.getElementById('statTotalQueries').textContent = data.total_queries;
-      document.getElementById('statWebCount').textContent = `Web: ${data.channels.web}`;
-      document.getElementById('statTgCount').textContent = `TG: ${data.channels.telegram}`;
+      document.getElementById('statTotalQueries').textContent = data.total_queries ?? 0;
+      document.getElementById('statWebCount').textContent = `Web: ${data.channels?.web ?? 0}`;
+      document.getElementById('statTgCount').textContent = `TG: ${data.channels?.telegram ?? 0}`;
 
-      document.getElementById('statSatisfactionRate').textContent = `${data.satisfaction.rate}%`;
-      document.getElementById('statRatingsCount').textContent = `${data.satisfaction.total_rated} votos (${data.satisfaction.up} 👍 / ${data.satisfaction.down} 👎)`;
+      const sat = data.satisfaction || { rate: 100, total_rated: 0, up: 0, down: 0 };
+      document.getElementById('statSatisfactionRate').textContent = `${sat.rate}%`;
+      document.getElementById('statRatingsCount').textContent = `${sat.total_rated} votos (${sat.up} útiles / ${sat.down} neg.)`;
+      document.getElementById('statTotalGaps').textContent = data.total_gaps ?? 0;
 
-      document.getElementById('statTotalGaps').textContent = data.total_gaps;
-
-      // Render Top Temas
+      // Temas
       const topicsDiv = document.getElementById('topicsContainer');
       topicsDiv.innerHTML = '';
       if (!data.topics || data.topics.length === 0) {
-        topicsDiv.innerHTML = '<p style="color:var(--text-muted); font-size:0.84rem;">Aún no hay suficientes consultas registradas.</p>';
+        topicsDiv.innerHTML = '<p style="color: var(--text-muted); font-size: 0.84rem;">Aún no hay suficientes consultas registradas.</p>';
       } else {
         data.topics.forEach(t => {
           const row = document.createElement('div');
-          row.className = 'topic-bar-row';
+          row.className = 'topic-row';
           row.innerHTML = `
-            <div class="topic-bar-header">
-              <span>${t.topic}</span>
-              <span style="color:var(--text-muted);">${t.count} (${t.percent}%)</span>
+            <div class="topic-meta">
+              <strong>${escapeHtml(t.topic)}</strong>
+              <span>${escapeHtml(t.count)} (${escapeHtml(t.percent)}%)</span>
             </div>
-            <div class="topic-progress-bg">
-              <div class="topic-progress-fill" style="width: ${t.percent}%;"></div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${Math.min(100, Number(t.percent) || 0)}%;"></div>
             </div>
           `;
           topicsDiv.appendChild(row);
         });
       }
 
-      // Render Vacíos Normativos
+      // Vacíos normativos
       const gapsTbody = document.getElementById('gapsTableBody');
       gapsTbody.innerHTML = '';
       if (!data.gaps || data.gaps.length === 0) {
-        gapsTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:16px;">✓ ¡Excelente! Todas las consultas estudiantiles han sido resueltas con los reglamentos actuales.</td></tr>';
+        gapsTbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--success); font-weight: 600; padding: 20px;">✓ ¡Excelente! Sin vacíos normativos pendientes.</td></tr>';
       } else {
         data.gaps.forEach(g => {
           const tr = document.createElement('tr');
-          const safeQuery = escapeHtml(g.query);
           const safeChannel = escapeHtml((g.channel || 'web').toUpperCase());
           tr.innerHTML = `
-            <td style="font-weight:600; color:var(--danger);">${safeQuery}</td>
+            <td style="font-weight: 600; color: var(--danger);">${escapeHtml(g.query)}</td>
             <td><span class="tag-badge ${g.channel === 'telegram' ? 'tag-green' : 'tag-blue'}">${safeChannel}</span></td>
-            <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(g.timestamp)}</td>
+            <td class="nowrap" style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(g.timestamp)}</td>
           `;
           gapsTbody.appendChild(tr);
         });
       }
 
-      // Render Consultas Recientes
+      // Consultas recientes
       const recentTbody = document.getElementById('recentQueriesTableBody');
       recentTbody.innerHTML = '';
       if (!data.recent_queries || data.recent_queries.length === 0) {
-        recentTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Sin consultas recientes.</td></tr>';
+        recentTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Sin consultas recientes.</td></tr>';
       } else {
         data.recent_queries.forEach(q => {
           const tr = document.createElement('tr');
-          let ratingBadge = '<span style="color:var(--text-muted);">-</span>';
-          if (q.rating === 'up') ratingBadge = '<span style="color:var(--success); font-weight:700;">👍 Útil</span>';
-          if (q.rating === 'down') ratingBadge = '<span style="color:var(--danger); font-weight:700;">👎 Insatisfecho</span>';
+          let ratingBadge = '<span style="color: var(--text-muted);">—</span>';
+          if (q.rating === 'up') ratingBadge = '<span class="tag-badge tag-green">Útil</span>';
+          if (q.rating === 'down') ratingBadge = '<span class="tag-badge tag-red">Insatisfecho</span>';
 
-          const gapBadge = q.is_gap 
-            ? '<span class="tag-badge tag-red">Vacío</span>' 
+          const gapBadge = q.is_gap
+            ? '<span class="tag-badge tag-red">Vacío</span>'
             : '<span class="tag-badge tag-green">Respondida</span>';
 
           const safeQuery = escapeHtml(q.query);
-          const safeTopic = escapeHtml(q.topic);
           const safeChannel = escapeHtml((q.channel || 'web').toUpperCase());
-
           tr.innerHTML = `
-            <td style="font-size:0.76rem; color:var(--text-muted);">${escapeHtml(q.timestamp)}</td>
+            <td class="nowrap" style="font-size: 0.76rem; color: var(--text-muted);">${escapeHtml(q.timestamp)}</td>
             <td><span class="tag-badge ${q.channel === 'telegram' ? 'tag-green' : 'tag-blue'}">${safeChannel}</span></td>
-            <td><strong>${safeTopic}</strong></td>
-            <td style="max-width:320px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${safeQuery}">${safeQuery}</td>
+            <td class="nowrap"><strong>${escapeHtml(q.topic)}</strong></td>
+            <td style="max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${safeQuery}">${safeQuery}</td>
             <td>${gapBadge}</td>
             <td>${ratingBadge}</td>
           `;
@@ -1169,182 +1554,136 @@
         const res = await fetch('/api/admin/analytics/export', {
           headers: { 'x-admin-key': adminToken }
         });
-        if (!res.ok) throw new Error('Error al descargar');
+        if (!res.ok) throw new Error('Error exportando');
         const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `reporte_consultas_iutecp_${new Date().toISOString().slice(0,10)}.csv`;
+        a.download = 'reporte_consultas_iutecp.csv';
         document.body.appendChild(a);
         a.click();
         a.remove();
-        showToast('Reporte CSV descargado con éxito.', 'success');
+        URL.revokeObjectURL(url);
+        showToast('Reporte CSV descargado', 'success');
       } catch (err) {
-        showToast('Error al exportar reporte CSV.', 'danger');
+        showToast('No se pudo exportar el CSV', 'error');
       }
     }
 
     async function resetAnalyticsConfirm() {
-      if (!confirm('¿Deseas reiniciar y vaciar el historial de analítica y consultas? Esta acción no se puede deshacer.')) {
-        return;
-      }
+      if (!confirm('¿Seguro que deseas borrar todo el historial de analíticas?')) return;
       try {
         const res = await fetch('/api/admin/analytics/reset', {
           method: 'DELETE',
           headers: { 'x-admin-key': adminToken }
         });
         if (res.ok) {
-          showToast('Historial de analítica vaciado.', 'success');
+          showToast('Historial de analíticas limpiado', 'success');
           loadAnalytics();
         }
       } catch (err) {
-        showToast('Error al resetear analítica.', 'danger');
+        showToast('Error al limpiar historial', 'error');
       }
     }
 
-    async function uploadSelectedFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    /* ================= ESTUDIANTES TERNANET ================= */
+    async function loadStudentsAdmin() {
+      const tbody = document.getElementById('studentsTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">Cargando expedientes...</td></tr>';
+      try {
+        const res = await fetch('/api/admin/students', {
+          headers: { 'x-admin-key': adminToken }
+        });
+        if (res.status === 401) return logout();
+        if (!res.ok) throw new Error('Error al consultar lista de estudiantes');
+        cachedStudents = await res.json();
+        filterStudentsTable();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--danger);">Error cargando estudiantes: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
 
-      if (!file.name.toLowerCase().endsWith('.pdf')) {
-        showToast('Solo se permiten archivos en formato PDF.', 'danger');
+    function filterStudentsTable() {
+      const q = (document.getElementById('studentSearchInput')?.value || '').toLowerCase().trim();
+      const list = q
+        ? cachedStudents.filter(st =>
+            (st.nombre || '').toLowerCase().includes(q) ||
+            (st.cedula || '').toLowerCase().includes(q) ||
+            (st.cedula_formato || '').toLowerCase().includes(q) ||
+            (st.carrera || '').toLowerCase().includes(q) ||
+            (st.sede || '').toLowerCase().includes(q)
+          )
+        : cachedStudents;
+      renderStudentsRows(list);
+    }
+
+    function renderStudentsRows(students) {
+      const tbody = document.getElementById('studentsTableBody');
+      tbody.innerHTML = '';
+      if (!students || students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">No se encontraron estudiantes.</td></tr>';
         return;
       }
 
-      const formData = new FormData();
-      formData.append('file', file);
+      students.forEach(st => {
+        const tr = document.createElement('tr');
+        const sc = st.servicio_comunitario || {};
+        const scStatus = typeof sc === 'object' ? (sc.estatus || 'N/A') : String(sc);
+        const scDetail = typeof sc === 'object' ? (sc.proyecto || sc.observacion || '') : '';
+        const scTagClass = scStatus.toLowerCase().includes('aprobado') ? 'tag-green'
+          : scStatus.toLowerCase().includes('curso') || scStatus.toLowerCase().includes('habilitado') ? 'tag-blue'
+          : 'tag-slate';
 
-      showToast(`Subiendo e indexando ${file.name}...`, 'success');
+        const pas = st.pasantias || {};
+        const pasStatus = typeof pas === 'object' ? (pas.estatus || 'N/A') : String(pas);
+        const pasDetail = typeof pas === 'object' ? (pas.empresa || pas.observacion || '') : '';
+        const pasTagClass = pasStatus.toLowerCase().includes('aprobada') ? 'tag-green'
+          : pasStatus.toLowerCase().includes('curso') ? 'tag-blue'
+          : 'tag-slate';
 
-      try {
-        const res = await fetch('/api/admin/upload', {
-          method: 'POST',
-          headers: { 'x-admin-key': adminToken },
-          body: formData
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showToast(`✅ ${data.message} (${data.total_chunks} fragmentos activos)`, 'success');
-          loadDocuments();
+        const isSolvente = String(st.estatus_arancelario || '').toLowerCase().startsWith('solvente');
+        let arancelHtml = `<span class="tag-badge ${isSolvente ? 'tag-green' : 'tag-amber'}">${isSolvente ? 'Solvente' : 'Pendiente'}</span>`;
+        if (st.cashea) {
+          arancelHtml += `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Cashea: ${escapeHtml(st.cashea.cuotas_pagadas)}/${escapeHtml(st.cashea.cuotas_totales)} cuotas</div>`;
         } else {
-          showToast(`Error: ${data.detail || 'No se pudo subir'}`, 'danger');
+          arancelHtml += `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Pago regular</div>`;
         }
-      } catch (err) {
-        showToast('Error de red al subir el documento.', 'danger');
-      } finally {
-        e.target.value = '';
-      }
-    }
 
-    async function deleteDocument(name) {
-      if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente el documento "${name}" de la base de conocimientos?`)) {
-        return;
-      }
+        const pct = Math.min(100, Math.max(0, Number(st.porcentaje_carrera) || 0));
 
-      try {
-        const res = await fetch(`/api/admin/documents/${encodeURIComponent(name)}`, {
-          method: 'DELETE',
-          headers: { 'x-admin-key': adminToken }
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showToast(`🗑️ Documento eliminado. Base actualizada a ${data.total_chunks} fragmentos.`, 'success');
-          loadDocuments();
-        } else {
-          showToast(`Error: ${data.detail || 'No se pudo eliminar'}`, 'danger');
-        }
-      } catch (err) {
-        showToast('Error de red al intentar eliminar el archivo.', 'danger');
-      }
-    }
-
-    function downloadDocument(name) {
-      fetch(`/api/admin/documents/${encodeURIComponent(name)}/download`, {
-        headers: { 'x-admin-key': adminToken }
-      })
-      .then(res => res.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      })
-      .catch(() => showToast('Error al descargar el archivo.', 'danger'));
-    }
-
-    async function triggerReindex() {
-      const btn = document.getElementById('reindexBtn');
-      btn.disabled = true;
-      btn.innerHTML = `<span>⏳ Reindexando...</span>`;
-
-      try {
-        const res = await fetch('/api/admin/reindex', {
-          method: 'POST',
-          headers: { 'x-admin-key': adminToken }
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showToast(`✅ ${data.message}`, 'success');
-          loadDocuments();
-        } else {
-          showToast('Error al reindexar la base de conocimientos.', 'danger');
-        }
-      } catch (err) {
-        showToast('Error al conectar con el servidor.', 'danger');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<span>🔄 Reindexar Todo en Caliente</span>`;
-      }
-    }
-
-    function setupDragAndDrop() {
-      const dropzone = document.getElementById('dropzone');
-
-      ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          dropzone.classList.add('dragover');
-        });
+        tr.innerHTML = `
+          <td>
+            <div class="student-cell">
+              <div class="student-avatar">${escapeHtml(getInitials(st.nombre))}</div>
+              <div>
+                <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(st.nombre)}</div>
+                ${st.distincion ? `<span style="font-size: 0.69rem; color: var(--primary); font-weight: 600;">★ ${escapeHtml(st.distincion)}</span>` : ''}
+              </div>
+            </div>
+          </td>
+          <td class="nowrap"><code style="font-size: 0.78rem; background: var(--bg-subtle); padding: 3px 6px; border-radius: 5px; border: 1px solid var(--border);">${escapeHtml(st.cedula_formato)}</code></td>
+          <td>
+            <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(st.carrera)}</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(st.sede)} · Turno ${escapeHtml(st.turno)}</div>
+          </td>
+          <td class="nowrap">
+            <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(formatOrdinal(st.semestre))} Semestre</div>
+            <div style="font-size: 0.72rem; color: var(--success); font-weight: 700;">${escapeHtml(st.creditos_aprobados)}/${escapeHtml(st.creditos_totales)} UC (${pct}%)</div>
+            <div class="mini-bar-wrap"><div class="mini-bar-fill" style="width: ${pct}%;"></div></div>
+          </td>
+          <td class="nowrap"><span class="tag-badge tag-blue">${escapeHtml(Number(st.promedio).toFixed(2))} / 20</span></td>
+          <td style="max-width: 190px;">
+            <span class="tag-badge ${scTagClass}">${escapeHtml(scStatus)}</span>
+            ${scDetail ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">${escapeHtml(scDetail)}</div>` : ''}
+          </td>
+          <td style="max-width: 180px;">
+            <span class="tag-badge ${pasTagClass}">${escapeHtml(pasStatus)}</span>
+            ${pasDetail ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">${escapeHtml(pasDetail)}</div>` : ''}
+          </td>
+          <td class="nowrap">${arancelHtml}</td>
+        `;
+        tbody.appendChild(tr);
       });
-
-      ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          dropzone.classList.remove('dragover');
-        });
-      });
-
-      dropzone.addEventListener('drop', (e) => {
-        const files = e.dataTransfer.files;
-        if (files && files.length > 0) {
-          document.getElementById('fileInput').files = files;
-          uploadSelectedFile({ target: { files } });
-        }
-      });
-    }
-
-    function showToast(text, type = 'info') {
-      const box = document.getElementById('toastBox');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = text;
-      box.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
     }
   </script>
 </body>
