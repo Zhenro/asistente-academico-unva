@@ -7,8 +7,10 @@ import re
 import socket
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
+
+VZLA_TZ = timezone(timedelta(hours=-4))  # Hora oficial de Venezuela (VET / UTC-4)
 
 # Forzar resolución IPv4 para peticiones salientes (evita que Linux/Render cuelgue en IPv6 sin ruta)
 _orig_getaddrinfo = socket.getaddrinfo
@@ -596,7 +598,7 @@ async def admin_list_documents(x_admin_key: Optional[str] = Header(None)):
 
     docs = []
     for pdf in sorted(DOCUMENTS_DIR.glob("*.pdf"), key=lambda p: p.stat().st_mtime, reverse=True):
-        mtime = datetime.fromtimestamp(pdf.stat().st_mtime).strftime("%d/%m/%Y %H:%M")
+        mtime = datetime.fromtimestamp(pdf.stat().st_mtime, tz=VZLA_TZ).strftime("%d/%m/%Y %I:%M %p")
         size_kb = round(pdf.stat().st_size / 1024, 2)
         try:
             pages = len(extract_text_from_pdf(pdf))

@@ -9,9 +9,11 @@ import uuid
 import threading
 import tempfile
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+
+VZLA_TZ = timezone(timedelta(hours=-4))  # Hora oficial de Venezuela (VET / UTC-4)
 
 try:
     from src.config import DATA_DIR
@@ -110,7 +112,7 @@ def record_query(
     query_id = "q_" + uuid.uuid4().hex[:10]
     topic = _classify_topic(query)
     is_gap = _is_knowledge_gap(answer, sources, is_gap_override=is_gap_override)
-    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    now = datetime.now(VZLA_TZ).strftime("%d/%m/%Y %I:%M:%S %p")
 
     entry = {
         "id": query_id,
