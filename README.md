@@ -18,13 +18,13 @@ Sistema integral de atención, orientación y resolución de consultas académic
   * Estado de cuotas de financiamiento con **Cashea** y solvencias de biblioteca, caja y control de estudios.
   * Promedio acumulado, materias en curso y estatus de graduación.
 * Incluye 7 perfiles de prueba con casos académicos variados:
-  * **José Andrés Fermín** (`27.346.776`) · TSU en Informática (Guatire)
-  * **Diego Torres** (`28.416.131`) · TSU en Informática (Guatire)
-  * **Maryander Torres** (`30.566.388`) · TSU en Administración de Empresas (Caracas)
-  * **Ismael Pernía** (`30.155.465`) · TSU en Informática (Guatire)
-  * **Anibal Figuera** (`17.498.904`) · TSU en Contaduría y Finanzas (Caracas)
-  * **Félix Ruiz** (`30.771.246`) · TSU en Publicidad y Mercadeo (Guatire)
-  * **Paola Rada** (`31.418.461`) · TSU en Informática (Barcelona / Puerto La Cruz)
+  * **José Andrés Fermín**
+  * **Diego Torres**
+  * **Maryander Torres**
+  * **Ismael Pernía**
+  * **Anibal Figuera**
+  * **Félix Ruiz**
+  * **Paola Rada**
 
 ### 3. 🔐 Panel Administrativo de Secretaría (`/admin`)
 * Acceso protegido por contraseña institucional (`unva2026`).
