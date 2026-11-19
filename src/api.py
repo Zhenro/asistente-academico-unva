@@ -318,6 +318,13 @@ async def student_identify_endpoint(request: StudentIdentifyRequest):
     }
 
 
+@app.post("/api/student/logout")
+async def student_logout_endpoint(request: ResetRequest):
+    """Desvincula el estudiante de la sesión actual para regresar al modo general (público)."""
+    rag_engine.clear_session_student(request.session_id)
+    return {"status": "success", "message": "Sesión cambiada a modo general."}
+
+
 @app.get("/api/student/profile/{cedula}")
 async def get_student_profile_endpoint(cedula: str):
     """Consulta pública o interna del expediente simulado de TernaNet."""

@@ -1069,7 +1069,7 @@
         </div>
 
         <!-- BANNER DE IDENTIFICACIÓN TERNANET -->
-        <div style="margin-top: 14px; padding: 12px 14px; background: #eff6ff; border: 1.5px dashed #93c5fd; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <div id="ternaBanner" style="margin-top: 14px; padding: 12px 14px; background: #eff6ff; border: 1.5px dashed #93c5fd; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.5rem;">🎓</span>
             <div>
@@ -1178,16 +1178,22 @@
     function updateStudentUI() {
       const btn = document.getElementById('studentBadgeBtn');
       const label = document.getElementById('studentBadgeLabel');
+      const banner = document.getElementById('ternaBanner');
       if (!btn || !label) return;
       if (currentStudent) {
         btn.classList.add('active');
         const shortName = currentStudent.nombre.split(' ')[0] + ' ' + (currentStudent.nombre.split(' ')[1] || '');
         const cleanCarrera = currentStudent.carrera.replace('TSU en ', '').replace('TSU ', '');
-        label.innerHTML = `👤 ${shortName} (${cleanCarrera}) <span class="logout-x" onclick="logoutStudent(event)" title="Cerrar expediente de estudiante">&times;</span>`;
+        label.innerHTML = `👤 ${shortName} (${cleanCarrera}) <span class="logout-x" onclick="logoutStudent(event)" title="Volver a Modo General">&times;</span>`;
+        if (banner) banner.style.display = 'none';
+        if (chatQuery) chatQuery.placeholder = 'Pregunta sobre tu expediente, notas, servicio comunitario o pasantías...';
       } else {
         btn.classList.remove('active');
         label.innerHTML = 'Soy Estudiante (TernaNet)';
+        if (banner) banner.style.display = 'flex';
+        if (chatQuery) chatQuery.placeholder = 'Escribe tu consulta general (admisión, sedes, carreras, Cashea)...';
       }
+      if (chatQuery) chatQuery.disabled = false;
     }
 
     function openTernaModal() {
@@ -1285,12 +1291,22 @@
       }).catch(console.warn);
     }
 
-    function logoutStudent(e) {
+    async function logoutStudent(e) {
       if (e) e.stopPropagation();
       currentStudent = null;
       localStorage.removeItem('iutecp_active_student');
       updateStudentUI();
-      appendBubble('bot', 'ℹ️ Has cerrado sesión de tu expediente estudiantil. Las siguientes consultas se responderán con las normativas generales.');
+      try {
+        await fetch('/api/student/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: currentSessionId })
+        });
+      } catch (err) {
+        console.warn('No se pudo cerrar sesión en el servidor:', err);
+      }
+      appendBubble('bot', 'ℹ️ Has vuelto al **Modo General (sin expediente)**. Puedes seguir escribiendo cualquier consulta institucional sobre admisión, sedes, carreras, pagos o reglamentos.');
+      chatQuery.focus();
     }
 
     // Inicializar UI de estudiante al cargar la página

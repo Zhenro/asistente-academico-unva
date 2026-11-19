@@ -143,11 +143,69 @@ class RAGEngine:
             return None
         return get_student_by_cedula(self.session_students[session_id])
 
+    def clear_session_student(self, session_id: str):
+        """Desvincula el expediente estudiantil de una sesión para volver al modo general."""
+        if session_id and session_id in self.session_students:
+            del self.session_students[session_id]
+
     def clear_session(self, session_id: str):
         if session_id in self.session_memories:
             del self.session_memories[session_id]
         if session_id in self.session_students:
             del self.session_students[session_id]
+
+    def _is_conversational_query(self, query: str) -> bool:
+        """Detecta saludos, agradecimientos o preguntas sobre las capacidades del asistente inicial."""
+        norm = normalize_text(query).strip()
+        clean = re.sub(r"[^a-z0-9\s]", "", norm).strip()
+        if not clean:
+            return False
+        greetings = {
+            "hola", "buenas", "buenos dias", "buenas tardes", "buenas noches",
+            "saludos", "hey", "holi", "que tal", "como estas", "como esta",
+            "gracias", "muchas gracias", "ok", "okay", "perfecto", "genial",
+            "ayuda", "menu", "inicio", "start"
+        }
+        if clean in greetings:
+            return True
+        patterns = [
+            r"^(hola|buenas|buenos dias|buenas tardes|buenas noches|saludos)\b",
+            r"\b(quien eres|que eres|que puedes hacer|en que me puedes ayudar|como funcionas|que haces)\b",
+            r"^(muchas )?gracias\b"
+        ]
+        return any(re.search(p, clean) for p in patterns)
+
+    def _conversational_reply(self, query: str, active_student: Optional[Dict[str, Any]] = None) -> str:
+        """Respuesta cordial para el modo inicial (público) o personalizado ante saludos y consultas de ayuda."""
+        norm = normalize_text(query).strip()
+        if "gracias" in norm:
+            if active_student:
+                return f"¡Con mucho gusto, **{active_student.get('nombre')}**! 😊 Si necesitas consultar algo más sobre tu expediente o los reglamentos del IUTECP, aquí estoy para ayudarte."
+            return "¡Con mucho gusto! 😊 Si tienes otra consulta sobre admisión, sedes, carreras, pagos o reglamentos del IUTECP, escríbeme cuando quieras."
+
+        if active_student:
+            return (
+                f"¡Hola, **{active_student.get('nombre')}**! 👋 Qué gusto saludarte.\n\n"
+                f"Actualmente estás en **Modo Personalizado (TernaNet)** ({active_student.get('carrera')} · Sede {active_student.get('sede')}). "
+                "Puedes preguntarme directamente sobre:\n"
+                "• 📊 Tus materias en curso y promedio acumulado\n"
+                "• 🤝 Si cumples los requisitos para **Servicio Comunitario**\n"
+                "• 💼 Tu estatus de **Pasantías** y solvencias\n"
+                "• 💳 El estado de tus cuotas con **Cashea**\n"
+                "• 📋 Cualquier normativa o reglamento oficial del IUTECP\n\n"
+                "¿En qué te puedo ayudar hoy?"
+            )
+
+        return (
+            "¡Hola! 👋 Soy el **Asistente Virtual Oficial del IUTECP** (Modo General).\n\n"
+            "Puedo orientarte de inmediato sobre:\n"
+            "• 📋 **Nuevo Ingreso:** requisitos, recaudos e inscripción en TernaNet\n"
+            "• 🏢 **Sedes y Contacto:** Caracas, Guatire y Barcelona / Puerto La Cruz\n"
+            "• 🎓 **Oferta Académica:** carreras TSU y turnos (diurno, nocturno, sabatino)\n"
+            "• 💳 **Pagos y Cashea:** aranceles y financiamiento en cuotas\n"
+            "• 📊 **Reglamentos:** escala de notas, cortes, pérdida por inasistencia (PI), servicio comunitario y pasantías\n\n"
+            "💡 *Si ya eres estudiante del IUTECP, puedes pulsar **Identificarme (TernaNet)** arriba o escribir tu cédula aquí para activar el modo personalizado con tu expediente.*"
+        )
 
     def reload_documents(self) -> int:
         """Limpia la memoria caché y recarga todos los documentos PDF activos."""
@@ -368,6 +426,16 @@ class RAGEngine:
         # 1. Recuperación BM25
         contexts = self.retrieve(query, history=history)
 
+        # Saludos o preguntas de ayuda en modo inicial/personalizado (sin forzar login)
+        if not contexts and self._is_conversational_query(query):
+            msg = self._conversational_reply(query, active_student)
+            self._record_session_turn(session_id, query, msg)
+            return {
+                "answer": msg,
+                "sources": [],
+                "student": active_student
+            }
+
         # Solo retornar vacío si no hay contexto normativo NI perfil de estudiante activo
         if not contexts and not active_student:
             msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
@@ -483,6 +551,20 @@ class RAGEngine:
             return
 
         contexts = self.retrieve(query, history=history)
+
+        if not contexts and self._is_conversational_query(query):
+            msg = self._conversational_reply(query, active_student)
+            self._record_session_turn(session_id, query, msg)
+            query_id = analytics.record_query(
+                query=query,
+                channel="web",
+                answer=msg,
+                sources=[]
+            )
+            yield f"data: {json.dumps({'type': 'token', 'content': msg})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'sources': [], 'student': active_student, 'query_id': query_id})}\n\n"
+            return
+
         if not contexts and not active_student:
             msg = "No encontré información relevante en los reglamentos y guías oficiales del IUTECP para tu consulta. Te sugiero dirigirte a la Coordinación de Control de Estudios en la sede correspondiente."
             query_id = analytics.record_query(

@@ -162,6 +162,39 @@ class TestAPIEndpoints(unittest.TestCase):
                 self.assertEqual(r2.status_code, 200)
                 self.assertEqual(r3.status_code, 429)
 
+    def test_general_mode_greeting_and_logout_flow(self):
+        # 1. Modo General (sin estudiante logueado): saluda y orienta correctamente
+        res_hi = self.client.post("/api/chat", json={
+            "message": "hola",
+            "session_id": "dual_mode_sess"
+        })
+        self.assertEqual(res_hi.status_code, 200)
+        self.assertIsNone(res_hi.json()["student"])
+        self.assertIn("Modo General", res_hi.json()["answer"])
+
+        # 2. Activar Modo Personalizado con Paola Rada
+        res_id = self.client.post("/api/student/identify", json={
+            "cedula": "31.418.461",
+            "session_id": "dual_mode_sess"
+        })
+        self.assertEqual(res_id.status_code, 200)
+
+        # 3. Cerrar sesión de estudiante (volver a Modo General)
+        res_out = self.client.post("/api/student/logout", json={
+            "session_id": "dual_mode_sess"
+        })
+        self.assertEqual(res_out.status_code, 200)
+
+        # 4. Siguiente consulta NO debe re-loguear a Paola Rada
+        with patch("src.rag_engine.gemini_client", None):
+            res_after = self.client.post("/api/chat", json={
+                "message": "hola",
+                "session_id": "dual_mode_sess"
+            })
+        self.assertEqual(res_after.status_code, 200)
+        self.assertIsNone(res_after.json()["student"])
+        self.assertNotIn("Paola", res_after.json()["answer"])
+
 
 if __name__ == "__main__":
     unittest.main()
