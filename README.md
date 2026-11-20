@@ -87,7 +87,7 @@ Abre en tu navegador:
 ### 2. Configurar Claves de Entorno (`.env`)
 ```env
 GEMINI_API_KEY=tu_clave_de_google_aistudio
-GEMINI_MODEL=gemini-flash-lite-latest
+GEMINI_MODEL=gemini-3.1-flash-lite
 TELEGRAM_BOT_TOKEN=tu_token_de_botfather
 TELEGRAM_BOT_USERNAME=UNDVABOT
 ADMIN_PASSWORD=unva2026

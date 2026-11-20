@@ -24,7 +24,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 # Default Model Selection
 MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "gemini" if GEMINI_API_KEY else "openai" if OPENAI_API_KEY else "offline")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 # RAG Settings

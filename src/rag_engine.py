@@ -496,8 +496,8 @@ class RAGEngine:
                     temperature=0.2,
                     max_output_tokens=600,
                 )
-                model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
-                models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-flash-latest"]))
+                model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-3.1-flash-lite"
+                models_to_try = list(dict.fromkeys([model_name, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-flash-lite-latest"]))
                 full_prompt = f"{system_instruction}\n\n{user_prompt}"
                 for candidate_model in models_to_try:
                     try:
@@ -631,8 +631,8 @@ class RAGEngine:
                 temperature=0.2,
                 max_output_tokens=600,
             )
-            model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
-            models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-flash-latest"]))
+            model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-3.1-flash-lite"
+            models_to_try = list(dict.fromkeys([model_name, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-flash-lite-latest"]))
             for candidate_model in models_to_try:
                 try:
                     # Streaming asíncrono nativo (no bloquea el event loop de FastAPI)
