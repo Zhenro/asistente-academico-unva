@@ -295,7 +295,12 @@ async def chat_stream_endpoint(request: ChatRequest, http_request: Request):
             session_id=request.session_id,
             student_cedula=request.student_cedula
         ),
-        media_type="text/event-stream"
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
     )
 
 

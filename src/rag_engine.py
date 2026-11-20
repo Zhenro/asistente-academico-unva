@@ -409,7 +409,7 @@ class RAGEngine:
             "Eres el Asistente Virtual Oficial del Universidad Nacional del Valle Alto (UNVA). "
             "Tu misión es orientar con amabilidad, claridad y precisión a la comunidad estudiantil. "
             "REGLAS OBLIGATORIAS:\n"
-            "1. Responde de forma clara y estructurada (usa viñetas o listas numeradas cuando explique requisitos o pasos).\n"
+            "1. Sé conciso, directo y estructurado (usa viñetas breves; evita introducciones largas o rellenos innecesarios).\n"
             "2. Basa tu respuesta ESTRICTAMENTE en la información institucional proporcionada en el CONTEXTO.\n"
             "3. Recuerda y utiliza el HISTORIAL DE LA CONVERSACIÓN para responder preguntas de seguimiento (ej. pronombres como 'allí', 'eso', 'esa sede', etc.).\n"
             "4. Menciona el nombre del reglamento, guía o artículo de forma natural (ej. 'Según el Reglamento de Evaluación Estudiantil...'), pero NO repitas nombres técnicos de archivos '.pdf' ni escribas '(Fuente: ...)' al final de cada viñeta, ya que el sistema muestra las fuentes oficiales automáticamente al pie del mensaje.\n"
@@ -491,6 +491,11 @@ class RAGEngine:
                     print(f"[!] Error creando genai.Client: {e}")
 
             if client:
+                from google.genai import types as genai_types
+                gen_config = genai_types.GenerateContentConfig(
+                    temperature=0.2,
+                    max_output_tokens=600,
+                )
                 model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
                 models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-flash-latest"]))
                 full_prompt = f"{system_instruction}\n\n{user_prompt}"
@@ -498,7 +503,8 @@ class RAGEngine:
                     try:
                         response = client.models.generate_content(
                             model=candidate_model,
-                            contents=full_prompt
+                            contents=full_prompt,
+                            config=gen_config
                         )
                         if response and response.text:
                             answer = response.text
@@ -566,14 +572,10 @@ class RAGEngine:
         cache_key = self._make_cache_key(query, active_student)
         cached_result = self._get_from_cache(cache_key)
 
-        # ⚡ Si está en caché: transmitir en ráfagas ultra-rápidas
+        # ⚡ Si está en caché: entrega inmediata en un solo evento (< 10ms en servidor)
         if cached_result and not history:
             full_text = cached_result["answer"]
-            words = full_text.split(" ")
-            for i in range(0, len(words), 5):
-                chunk = " ".join(words[i:i + 5]) + " "
-                yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
-                await asyncio.sleep(0.015)
+            yield f"data: {json.dumps({'type': 'token', 'content': full_text})}\n\n"
 
             self._record_session_turn(session_id, query, full_text)
             query_id = analytics.record_query(
@@ -624,6 +626,11 @@ class RAGEngine:
         full_answer = ""
 
         if current_api_key and gemini_client:
+            from google.genai import types as genai_types
+            gen_config = genai_types.GenerateContentConfig(
+                temperature=0.2,
+                max_output_tokens=600,
+            )
             model_name = os.getenv("GEMINI_MODEL") or GEMINI_MODEL or "gemini-flash-lite-latest"
             models_to_try = list(dict.fromkeys([model_name, "gemini-flash-lite-latest", "gemini-flash-latest"]))
             for candidate_model in models_to_try:
@@ -631,7 +638,8 @@ class RAGEngine:
                     # Streaming asíncrono nativo (no bloquea el event loop de FastAPI)
                     stream = await gemini_client.aio.models.generate_content_stream(
                         model=candidate_model,
-                        contents=full_prompt
+                        contents=full_prompt,
+                        config=gen_config
                     )
                     async for chunk in stream:
                         if chunk.text:

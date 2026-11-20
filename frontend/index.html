@@ -1552,12 +1552,22 @@
       chatScroll.appendChild(row);
       chatScroll.scrollTop = chatScroll.scrollHeight;
 
+      let rafPending = false;
+      let latestText = '';
       return {
         updateText: (text) => {
-          contentBox.innerHTML = renderSafeMarkdown(text);
-          chatScroll.scrollTop = chatScroll.scrollHeight;
+          latestText = text;
+          if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(() => {
+              contentBox.innerHTML = renderSafeMarkdown(latestText);
+              chatScroll.scrollTop = chatScroll.scrollHeight;
+              rafPending = false;
+            });
+          }
         },
         finalize: (finalText, sources = [], isCached = false, queryId = null) => {
+          rafPending = false;
           contentBox.innerHTML = renderSafeMarkdown(finalText);
 
           if (isCached) {
